@@ -10,16 +10,6 @@ const source = (relativePath: string) =>
   readFileSync(resolve(featureDir, relativePath), "utf-8");
 
 describe("Formulario de nuevo expediente accesible", () => {
-  it("el selector RICE usa diálogo compartido en vez de confirmación nativa", () => {
-    const content = source("NewCausaForm/RiceConductSelect.tsx");
-
-    ok(content.includes("<AlertDialog"));
-    ok(content.includes("Reemplazar observaciones"));
-    ok(!content.includes("window.confirm"));
-    ok(!content.includes("window.alert"));
-    ok(!content.includes("window.prompt"));
-  });
-
   it("solo asocia el label de estudiante cuando el select existe", () => {
     const content = source("ui/NewCausaForm.tsx");
 

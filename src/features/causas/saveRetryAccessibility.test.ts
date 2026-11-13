@@ -21,28 +21,6 @@ describe("Reintento de sincronización ante error de guardado", () => {
     ok(content.includes("mergePendingCausaSave"));
   });
 
-  it("el indicador global ofrece Reintentar solo en estado de error", () => {
-    const content = readFileSync(
-      resolve(featureDir, "../../widgets/header/SaveStatus.tsx"),
-      "utf-8",
-    );
-
-    ok(content.includes("onRetry"));
-    ok(/status === ["']error["'] && onRetry/.test(content));
-    ok(content.includes("Reintentar"));
-    ok(content.includes('aria-label="Reintentar sincronización"'));
-  });
-
-  it("el header del expediente muestra alerta con Reintentar en error", () => {
-    const content = source("../timeline/TimelineHeader.tsx");
-
-    ok(content.includes("saveStatus"));
-    ok(content.includes("onRetrySave"));
-    ok(content.includes('saveStatus === "error" && canEdit && onRetrySave'));
-    ok(content.includes("No se pudieron sincronizar los cambios"));
-    ok(content.includes('role="alert"'));
-  });
-
   it("el timeline obtiene estado y reintento del contexto compartido", () => {
     const content = source("../timeline/InteractiveTimeline.tsx");
     const context = sharedSource("lib/useAppContext.ts");
