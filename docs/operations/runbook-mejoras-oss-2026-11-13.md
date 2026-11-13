@@ -104,10 +104,10 @@ npm run build
 #### Paso 1 — Instalar dependencias de desarrollo
 
 ```bash
-npm i -D @testing-library/react @testing-library/dom @testing-library/user-event global-jsdom
+npm i -D @testing-library/react @testing-library/dom global-jsdom
 ```
 
-No instales `jsdom` por separado (lo trae `global-jsdom`) ni `@testing-library/jest-dom` (usa `node:assert`).
+No instales `jsdom` por separado (lo trae `global-jsdom`) ni `@testing-library/jest-dom` (usa `node:assert`). Agrega `@testing-library/user-event` solo cuando un test simule teclado o clic: mientras no se importe, Knip lo marca como dependencia sin uso.
 
 #### Paso 2 — Permitir tests `.tsx`
 
@@ -117,6 +117,22 @@ En `package.json`, cambia solo el glob de estos dos scripts:
 "test": "node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\" \"server/**/*.test.ts\"",
 "test:coverage": "node --experimental-test-coverage --test-coverage-exclude=api/index.js --test-coverage-lines=80 --experimental-test-module-mocks --import tsx --test \"src/**/*.test.ts\" \"src/**/*.test.tsx\" \"server/**/*.test.ts\"",
 ```
+
+Además, Knip 6 no reconoce `*.test.tsx` como entry y reporta el archivo y sus dependencias como sin uso. Agrega la entrada al bloque `knip` de `package.json`:
+
+```json
+"knip": {
+  "entry": ["src/**/*.test.tsx"],
+  "ignore": [
+```
+
+Verifica que no aparezcan hallazgos nuevos:
+
+```bash
+npm run knip:ci
+```
+
+Esperado: exit 0, con las dos excepciones justificadas ya conocidas (`database.types.ts` y `gitleaks`).
 
 #### Paso 3 — Crear el test piloto
 
@@ -166,7 +182,7 @@ En `src/features/causas/editCausaFormAccessibility.test.ts`, elimina **solo** el
 #### Paso 5 — Verificar
 
 ```bash
-npx node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test "src/shared/ui/FormField.test.tsx"
+node --experimental-test-module-mocks --test-concurrency=1 --import tsx --test "src/shared/ui/FormField.test.tsx"
 npm run test
 npm run lint
 npm run build
@@ -176,7 +192,7 @@ npm run check:bundle
 Esperado:
 
 - El test nuevo pasa con 1 test.
-- `npm run test` termina en 0; la cifra sube 1 respecto del baseline.
+- `npm run test` termina en 0. La cifra total se mantiene si se retiró la aserción reemplazada (1 test nuevo, 1 retirado); el número de suites sube 1.
 - `lint`, `build` y `check:bundle` en 0 y sin cambios de presupuesto (el test no entra al bundle).
 
 **Gate L1:** si el test nuevo falla por `document is not defined`, el import de `global-jsdom/register` no quedó primero. Corrige el orden, no cambies de librería.
@@ -316,6 +332,7 @@ Esperado:
 
 - `lint`, `test`, `build`, `knip:ci`, `check:bundle`: exit 0.
 - `knip:ci` no debe marcar las dependencias nuevas como sin uso (se usan en `FormField.test.tsx`).
+- `npm run knip` (sin `:ci`) sigue mostrando el baseline conocido de 10 exports y 4 tipos sin uso; no es un fallo de este runbook.
 - `git status`: limpio tras el commit documental.
 
 Playwright no se ejecuta en L1/L2: no se modifica UI ni flujos navegables. Si se ejecuta L3 Opción B, sí corresponde:
@@ -330,12 +347,12 @@ npx playwright test tests/accessibility.spec.ts --workers=1
 
 Completar por lote con salida real:
 
-| Lote        | Commit | Archivos | Tests antes | Tests después | lint | test | build | knip | Notas |
-| ----------- | ------ | -------- | ----------- | ------------- | ---- | ---- | ----- | ---- | ----- |
-| Preparación |        | 0        |             |               |      |      |       | base |       |
-| L1          |        |          |             |               |      |      |       |      |       |
-| L2          |        |          |             |               |      |      |       |      |       |
-| L3          |        |          |             |               |      |      |       |      |       |
+| Lote        | Commit     | Archivos | Tests antes | Tests después | lint | test | build | knip             | Notas                                                                                                                                                                  |
+| ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Preparación | `439686ae` | 0        | —           | 1.014/1.014   | ✅   | ✅   | ✅    | base             | Árbol limpio; baseline verificado.                                                                                                                                     |
+| L1          | `3e7097fa` | 4        | 1.014/1.014 | 1.014/1.014   | ✅   | ✅   | ✅    | `knip:ci` exit 0 | Se agregó `FormField.test.tsx`, se retiró la aserción de texto reemplazada y se configuró `entry` de Knip para `.test.tsx`. `user-event` se descartó por no tener uso. |
+| L2          |            |          |             |               |      |      |       |                  |                                                                                                                                                                        |
+| L3          |            |          |             |               |      |      |       |                  |                                                                                                                                                                        |
 
 ---
 
