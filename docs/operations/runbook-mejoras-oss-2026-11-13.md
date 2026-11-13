@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-13
 **Base:** `8e380541` (árbol limpio, sin cambios locales)
 **Alcance:** cerrar el hueco de tests de componente (0 archivos `.tsx` de test sobre 110) y formalizar las pruebas de RLS con pgTAP. Opcional y diferido: piezas puntuales de shadcn/ui.
-**Estado:** no ejecutado. Este documento es el plan; los lotes se ejecutan uno por commit.
+**Estado:** L1 y L2 ejecutados y verificados; L3 decidido como Opción A (sin cambios de código). Sin migraciones, escrituras remotas ni despliegues.
 **Audiencia:** cualquier modelo o persona. Cada paso indica archivo exacto, comando y criterio para avanzar.
 
 ---
