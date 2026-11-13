@@ -109,6 +109,15 @@ test.describe("Documento tamaño Carta", () => {
 
   test("10. Deteccion de contenido excedido", async ({ page }) => {
     const overflowWarning = page.locator("#overflow-warning");
+    // El desborde real depende de la fuente web; se fuerza contenido alto para
+    // validar la detección sin depender de la carga de Google Fonts.
+    await page.evaluate(() => {
+      const doc = document.getElementById("document-preview-a4");
+      const filler = document.createElement("div");
+      filler.style.height = "1200px";
+      doc?.appendChild(filler);
+      (window as unknown as { checkOverflow: () => boolean }).checkOverflow();
+    });
     await expect(overflowWarning).toBeVisible();
   });
 

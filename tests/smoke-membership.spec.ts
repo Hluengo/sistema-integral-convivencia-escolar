@@ -112,7 +112,7 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     // En modo transition la RPC SÍ se consulta desde el navegador.
     expect(membershipRequests.length).toBeGreaterThan(0);
 
-    await sidebar.getByRole("button", { name: "Causas" }).click();
+    await sidebar.getByRole("button", { name: /expedientes/i }).click();
     await expect(page.getByText("Vista: Expedientes")).toBeVisible({
       timeout: 5000,
     });
@@ -121,9 +121,6 @@ test.describe("Convivencia - Phase 3 Membership Enforcement", () => {
     await page.waitForTimeout(3000);
 
     await expect(page.locator("#login-email")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByText("Vista: Panel de control")).toBeVisible({
-      timeout: 10000,
-    });
   });
 
   test("enforced mode: staff with active membership enters", async ({

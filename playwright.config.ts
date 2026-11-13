@@ -3,6 +3,12 @@ import { defineConfig, devices } from "@playwright/test";
 
 dotenv.config({ path: ".env.local" });
 
+// Los E2E de permisos necesitan membresías activas: sin ellas el cliente
+// resuelve a solo lectura y los flujos de edición no son representativos.
+// Se puede forzar el modo legacy con E2E_MEMBERSHIPS_ENABLED=false.
+process.env.VITE_APP_MEMBERSHIPS_ENABLED =
+  process.env.E2E_MEMBERSHIPS_ENABLED ?? "true";
+
 const baseURL = process.env.E2E_BASE_URL || "http://localhost:3001";
 const shouldStartWebServer =
   process.env.PLAYWRIGHT_USE_WEBSERVER === "true" || !process.env.CI;
@@ -41,6 +47,12 @@ export default defineConfig({
           ...process.env,
           NODE_ENV: "production",
           E2E_USE_JWT_CLAIMS: "true",
+          // Producción exige Upstash; en E2E basta un valor ficticio porque
+          // el rate limit cae a memoria cuando Redis no responde.
+          UPSTASH_REDIS_REST_URL:
+            process.env.UPSTASH_REDIS_REST_URL ?? "https://e2e.invalid",
+          UPSTASH_REDIS_REST_TOKEN:
+            process.env.UPSTASH_REDIS_REST_TOKEN ?? "e2e-local",
         },
       }
     : undefined,
