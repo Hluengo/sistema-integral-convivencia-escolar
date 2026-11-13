@@ -3,7 +3,7 @@
 **Fecha:** 2026-11-13
 **Base:** `8e380541` (árbol limpio, sin cambios locales)
 **Alcance:** cerrar el hueco de tests de componente (0 archivos `.tsx` de test sobre 110) y formalizar las pruebas de RLS con pgTAP. Opcional y diferido: piezas puntuales de shadcn/ui.
-**Estado:** L1 y L2 ejecutados y verificados; L3 decidido como Opción A (sin cambios de código). Sin migraciones, escrituras remotas ni despliegues.
+**Estado:** L1 y L2 ejecutados y verificados; L3 decidido como Opción A (sin cambios de código). Gates finales ejecutados. Sin migraciones, escrituras remotas ni despliegues.
 **Audiencia:** cualquier modelo o persona. Cada paso indica archivo exacto, comando y criterio para avanzar.
 
 ---
@@ -345,13 +345,14 @@ npx playwright test tests/accessibility.spec.ts --workers=1
 
 Completar por lote con salida real:
 
-| Lote        | Commit     | Archivos | Tests antes | Tests después | lint | test | build | knip             | Notas                                                                                                                                                                  |
-| ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Preparación | `439686ae` | 0        | —           | 1.014/1.014   | ✅   | ✅   | ✅    | base             | Árbol limpio; baseline verificado.                                                                                                                                     |
-| L1          | `3e7097fa` | 4        | 1.014/1.014 | 1.014/1.014   | ✅   | ✅   | ✅    | `knip:ci` exit 0 | Se agregó `FormField.test.tsx`, se retiró la aserción de texto reemplazada y se configuró `entry` de Knip para `.test.tsx`. `user-event` se descartó por no tener uso. |
-| L1b         | `3317e4e9` | 5        | 1.014/1.014 | 1.018/1.018   | ✅   | ✅   | —     | `knip:ci` exit 0 | Tests de `SaveStatus`, `RiceConductSelect` y `TimelineHeader`; se retiraron las aserciones de texto reemplazadas.                                                      |
-| L2          | `3d49fbd0` | 1        | —           | —             | —    | —    | —     | —                | pgTAP 3/3 en verde con `--local`; rollback verificado (0 filas `RLS-%`). No se modificaron los SQL existentes.                                                         |
-| L3          | —          | 0        | —           | —             | —    | —    | —     | —                | Opción A: no se agregó `cmdk` ni `Combobox`; sin cambios de código.                                                                                                    |
+| Lote        | Commit     | Archivos | Tests antes | Tests después | lint | test | build | knip             | Notas                                                                                                                                                                    |
+| ----------- | ---------- | -------- | ----------- | ------------- | ---- | ---- | ----- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Preparación | `439686ae` | 0        | —           | 1.014/1.014   | ✅   | ✅   | ✅    | base             | Árbol limpio; baseline verificado.                                                                                                                                       |
+| L1          | `3e7097fa` | 4        | 1.014/1.014 | 1.014/1.014   | ✅   | ✅   | ✅    | `knip:ci` exit 0 | Se agregó `FormField.test.tsx`, se retiró la aserción de texto reemplazada y se configuró `entry` de Knip para `.test.tsx`. `user-event` se descartó por no tener uso.   |
+| L1b         | `3317e4e9` | 5        | 1.014/1.014 | 1.018/1.018   | ✅   | ✅   | —     | `knip:ci` exit 0 | Tests de `SaveStatus`, `RiceConductSelect` y `TimelineHeader`; se retiraron las aserciones de texto reemplazadas.                                                        |
+| L2          | `3d49fbd0` | 1        | —           | —             | —    | —    | —     | —                | pgTAP 3/3 en verde con `--local`; rollback verificado (0 filas `RLS-%`). No se modificaron los SQL existentes.                                                           |
+| L3          | —          | 0        | —           | —             | —    | —    | —     | —                | Opción A: no se agregó `cmdk` ni `Combobox`; sin cambios de código.                                                                                                      |
+| Cierre      | pendiente  | 0        | 1.018/1.018 | 1.018/1.018   | ✅   | ✅   | ✅    | ✅               | `check:bundle` OK: 70 archivos, mayor 522.942 bytes, total 2.709.119 bytes. Cobertura: líneas 91,34 %, ramas 82,86 %, funciones 91,67 %. `npm run test:coverage` exit 0. |
 
 ---
 
@@ -372,6 +373,8 @@ Completar por lote con salida real:
 4. L2 dejó evidencia de `Files=1, Tests=3` en verde, sin escrituras persistentes ni cambios en `supabase/migrations/`.
 5. L3 tiene decisión registrada (A o B), no queda en ambigüedad.
 6. Sin cambios en base de datos remota, secretos ni entorno de producción.
+
+**Nota de cierre:** los gates pasan. Al momento de registrar el cierre hay cambios no incluidos en este runbook (`package.json`, `package-lock.json`, `.storybook/`, `storybook-static/` y dos stories nuevas); no se modificaron ni se incluyeron porque no pertenecen a estos lotes. El árbol solo podrá declararse limpio después de que su autor los confirme o descarte.
 
 ---
 
