@@ -178,7 +178,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div
-        className={`flex items-center border-neutral-200 border-b ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
+        className={`flex items-center border-neutral-200 border-b bg-gradient-to-b from-white to-neutral-50/70 ${isCollapsed && !mobile ? "justify-center px-3 py-5" : "gap-3 px-5 py-5"}`}
       >
         <SidebarBrand showText={!isCollapsed || mobile} />
       </div>
@@ -199,8 +199,8 @@ function SidebarContent({
 
       {(!isCollapsed || mobile) && (
         <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-xs text-neutral-500 uppercase tracking-[0.15em]">
-            Navegación
+          <span className="font-bold text-[10px] text-neutral-400 uppercase tracking-[0.18em]">
+            Espacio de trabajo
           </span>
         </div>
       )}
@@ -225,11 +225,11 @@ function SidebarContent({
                   onViewChange(item.id);
                   onNavigate?.();
                 }}
-                className={`group flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-13px transition-colors duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
+                className={`group relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-13px transition-all duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
                 ${
                   isActive
-                    ? "border-brand-100 bg-brand-50 font-semibold text-brand-800 shadow-xs"
-                    : "text-neutral-600 hover:bg-neutral-50 hover:text-neutral-900"
+                    ? "border-brand-100 bg-brand-50 font-semibold text-brand-800 shadow-sm before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-600"
+                    : "text-neutral-600 hover:-translate-y-px hover:bg-neutral-50 hover:text-neutral-900 hover:shadow-xs"
                 }`}
                 aria-current={isActive ? "page" : undefined}
                 title={isCollapsed && !mobile ? item.label : undefined}
@@ -263,8 +263,8 @@ function SidebarContent({
       </nav>
 
       {(!isCollapsed || mobile) && (
-        <div className="mt-auto flex flex-col gap-2 border-neutral-100 border-t bg-white p-4">
-          <div className="flex items-center gap-2 rounded-xl bg-neutral-50 p-2.5">
+        <div className="mt-auto flex flex-col gap-2 border-neutral-100 border-t bg-gradient-to-t from-neutral-50/80 to-white p-4">
+          <div className="flex items-center gap-2 rounded-xl border border-neutral-200/80 bg-white p-2.5 shadow-xs">
             <ShieldCheck
               className="size-5 shrink-0 text-brand-600"
               aria-hidden="true"
@@ -403,7 +403,7 @@ export default memo(function Sidebar({
       )}
 
       <aside
-        className={`relative hidden shrink-0 flex-col border-r border-neutral-200 bg-white transition-colors duration-300 ease-out-expo lg:flex ${
+        className={`relative hidden shrink-0 flex-col border-neutral-200 border-r bg-white shadow-[2px_0_12px_rgba(15,23,42,0.03)] transition-colors duration-300 ease-out-expo lg:flex ${
           isCollapsed ? "w-[68px]" : "w-64"
         }`}
         aria-label="Barra de navegación principal"
