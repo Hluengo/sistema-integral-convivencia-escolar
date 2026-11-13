@@ -36,15 +36,14 @@ export function ensureRuntimeConfig(): void {
       `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`,
     );
   }
-  if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
-    missing.push("UPSTASH_REDIS_REST_URL");
-  }
-  if (!process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
-    missing.push("UPSTASH_REDIS_REST_TOKEN");
-  }
-  if (missing.length > 0) {
-    throw new Error(
-      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`,
+  // Upstash es opcional: sin él el rate limit queda en memoria por instancia,
+  // pero la app sigue operativa. Antes abortaba el arranque y tumbaba toda la API.
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL?.trim() ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN?.trim()
+  ) {
+    console.warn(
+      "[rate-limit] Upstash no configurado: el rate limit no se comparte entre instancias en producción.",
     );
   }
   ensureJwtConfig();

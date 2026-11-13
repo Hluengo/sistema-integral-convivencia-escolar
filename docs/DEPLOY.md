@@ -19,23 +19,23 @@ npx vercel --prod
 
 Agregar en Vercel Dashboard > Project Settings > Environment Variables:
 
-| Variable                                 | Valor                                                               |
-| ---------------------------------------- | ------------------------------------------------------------------- |
-| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase                                           |
-| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública (compatibilidad)                                   |
-| `VITE_SUPABASE_PUBLISHABLE_KEY`          | Publishable key pública                                             |
-| `SUPABASE_JWT_SECRET`                    | JWT secret de Supabase                                              |
-| `SUPABASE_SERVICE_ROLE_KEY`              | Service role key                                                    |
-| `UPSTASH_REDIS_REST_URL`                 | Redis REST URL para rate limit distribuido                          |
-| `UPSTASH_REDIS_REST_TOKEN`               | Redis REST token para rate limit distribuido                        |
-| `ALLOWED_ORIGINS`                        | Orígenes CORS permitidos, separados por coma                        |
-| `GEMINI_API_KEY`                         | Gemini API key pospago para informes, auditorías y documentos       |
-| `OPENROUTER_API_KEY`                     | OpenRouter API key para asesoría legal breve                        |
-| `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)                    |
-| `VITE_APP_MEMBERSHIPS_ENABLED`           | Activa la verificación de membresías                                |
-| `VITE_APP_MEMBERSHIPS_ENFORCED`          | Rechaza acceso sin membresía activa; habilitar después del backfill |
-| `VITE_SENTRY_DSN`                        | (opcional) Error tracking                                           |
-| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | (opcional) Analytics                                                |
+| Variable                                 | Valor                                                                |
+| ---------------------------------------- | -------------------------------------------------------------------- |
+| `VITE_SUPABASE_URL`                      | URL del proyecto Supabase                                            |
+| `VITE_SUPABASE_ANON_KEY`                 | Anon key pública (compatibilidad)                                    |
+| `VITE_SUPABASE_PUBLISHABLE_KEY`          | Publishable key pública                                              |
+| `SUPABASE_JWT_SECRET`                    | JWT secret de Supabase                                               |
+| `SUPABASE_SERVICE_ROLE_KEY`              | Service role key                                                     |
+| `UPSTASH_REDIS_REST_URL`                 | (recomendado) Redis REST URL para rate limit distribuido             |
+| `UPSTASH_REDIS_REST_TOKEN`               | (recomendado) Redis REST token; sin ambos el límite es por instancia |
+| `ALLOWED_ORIGINS`                        | Orígenes CORS permitidos, separados por coma                         |
+| `GEMINI_API_KEY`                         | Gemini API key pospago para informes, auditorías y documentos        |
+| `OPENROUTER_API_KEY`                     | OpenRouter API key para asesoría legal breve                         |
+| `LEGAL_DRAFT_MODEL`                      | Modelo Gemini para borradores legales (opcional)                     |
+| `VITE_APP_MEMBERSHIPS_ENABLED`           | Activa la verificación de membresías                                 |
+| `VITE_APP_MEMBERSHIPS_ENFORCED`          | Rechaza acceso sin membresía activa; habilitar después del backfill  |
+| `VITE_SENTRY_DSN`                        | (opcional) Error tracking                                            |
+| `VITE_POSTHOG_KEY` / `VITE_POSTHOG_HOST` | (opcional) Analytics                                                 |
 
 ### Pre-deploy Checklist
 
