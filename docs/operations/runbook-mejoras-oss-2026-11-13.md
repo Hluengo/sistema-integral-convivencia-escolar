@@ -374,7 +374,7 @@ Completar por lote con salida real:
 5. L3 tiene decisión registrada (A o B), no queda en ambigüedad.
 6. Sin cambios en base de datos remota, secretos ni entorno de producción.
 
-**Nota de cierre:** los gates pasan. Al momento de registrar el cierre hay cambios no incluidos en este runbook (`package.json`, `package-lock.json`, `.storybook/`, `storybook-static/` y dos stories nuevas); no se modificaron ni se incluyeron porque no pertenecen a estos lotes. El árbol solo podrá declararse limpio después de que su autor los confirme o descarte.
+**Nota de cierre:** los gates pasan. Se incorporó además la configuración de Storybook que estaba pendiente en el árbol (`.storybook/`, dos stories, dependencias únicas en `package.json`, lockfile, `.gitignore` y exclusión de `storybook-static` en ESLint). `npm run build:storybook` terminó correctamente. `storybook-static/` permanece ignorado y no se versiona.
 
 ---
 
