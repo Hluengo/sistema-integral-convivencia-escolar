@@ -139,7 +139,7 @@ export function DetailModalTabs<T extends string>({
       role="tablist"
       aria-label={ariaLabel}
     >
-      <div className="flex gap-8 overflow-x-auto">
+      <div className="flex gap-4 overflow-x-auto sm:gap-8">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -157,7 +157,7 @@ export function DetailModalTabs<T extends string>({
               activeTab === tab.id ? `detail-tabpanel-${tab.id}` : undefined
             }
             tabIndex={activeTab === tab.id ? 0 : -1}
-            className={`relative flex min-h-11 min-w-[7.25rem] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:min-w-0 sm:flex-row sm:gap-2 ${
+            className={`relative flex min-h-11 min-w-[6.5rem] flex-1 flex-col items-center justify-center gap-1 overflow-hidden rounded-none border-b-2 border-transparent px-2.5 py-2 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white sm:min-w-0 sm:flex-row sm:gap-2 sm:px-3 ${
               activeTab === tab.id
                 ? "border-brand-600 text-brand-600 font-semibold"
                 : "text-neutral-500 hover:border-neutral-300 hover:text-neutral-800"

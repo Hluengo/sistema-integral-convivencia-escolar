@@ -79,7 +79,7 @@ export function AnnotationStageCard({
   return (
     <article
       aria-label={`${label}: ${counts.total} alumnos${needsAction ? `, ${counts.pending} por gestionar` : ""}`}
-      className={`flex min-h-[190px] flex-col justify-between rounded-xl border bg-white p-3 shadow-xs ${needsAction ? "border-slate-200/70 ring-1 ring-gravisima-200" : "border-slate-200/70"}`}
+      className={`flex min-h-[170px] flex-col justify-between rounded-xl border bg-white p-3 shadow-xs ${needsAction ? "border-slate-200/70 ring-1 ring-gravisima-200" : "border-slate-200/70"}`}
       style={{ borderTop: `3px solid ${accentColor}` }}
     >
       <div>

@@ -145,7 +145,7 @@ function DashboardSkeleton() {
       aria-live="polite"
     >
       <div
-        className="h-32 animate-pulse border-l-4 border-neutral-200 bg-white"
+        className="card h-24 animate-pulse bg-neutral-100"
         aria-hidden="true"
       />
       <div
@@ -612,7 +612,7 @@ export default function DashboardStats({
       {isAuthenticated ? (
         <section
           aria-labelledby="dashboard-phases-title"
-          className="rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5"
+          className="card p-4 sm:p-5"
         >
           <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-4">
             <div>
@@ -753,7 +753,7 @@ export default function DashboardStats({
       <section className="grid grid-cols-1 gap-5 lg:grid-cols-12">
         <section
           aria-labelledby="severity-title"
-          className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:col-span-4"
+          className="card p-4 sm:p-5 lg:col-span-4"
         >
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
@@ -810,7 +810,7 @@ export default function DashboardStats({
 
         <section
           aria-labelledby="measures-title"
-          className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6 lg:col-span-8"
+          className="card p-4 sm:p-5 lg:col-span-8"
         >
           <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-2">

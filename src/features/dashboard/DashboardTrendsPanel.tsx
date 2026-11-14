@@ -214,7 +214,10 @@ export default function DashboardTrendsPanel({
   if (!hasData && !annotationTrendLoading && !annotationTrendError) return null;
 
   return (
-    <section className="card p-5" aria-labelledby="dashboard-trends-title">
+    <section
+      className="card p-4 sm:p-5"
+      aria-labelledby="dashboard-trends-title"
+    >
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0">
           <div className="mb-2 flex items-center gap-2">
@@ -308,7 +311,7 @@ export default function DashboardTrendsPanel({
         </div>
       </div>
 
-      <div className="mt-5 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <BarChart3
@@ -347,7 +350,7 @@ export default function DashboardTrendsPanel({
         </div>
       </div>
 
-      <div className="mt-4">
+      <div className="mt-3">
         <TrendChart
           points={chartPoints}
           legend={activeModeTotals}

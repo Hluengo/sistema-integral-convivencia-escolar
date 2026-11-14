@@ -1,5 +1,8 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
+import { useId, useState } from "react";
+import { ChevronDown } from "lucide-react";
+
 export interface ChartSeriesItem {
   label: string;
   value: number;
@@ -46,7 +49,7 @@ export function MonthlyBars({
 
   return (
     <div
-      className={`grid ${dashboard ? "h-64" : "h-52"} min-w-[36rem] items-end gap-2 sm:min-w-0`}
+      className={`grid ${dashboard ? "h-52 sm:h-64" : "h-52"} min-w-[30rem] items-end gap-1.5 sm:min-w-0 sm:gap-2`}
       style={{
         gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`,
       }}
@@ -60,7 +63,7 @@ export function MonthlyBars({
           }`}
         >
           <div
-            className={`flex ${dashboard ? "h-52" : "h-40"} items-end justify-center gap-1`}
+            className={`flex ${dashboard ? "h-44" : "h-40"} items-end justify-center gap-1`}
           >
             {point.series.map((item) => {
               const height =
@@ -68,7 +71,7 @@ export function MonthlyBars({
                   ? Math.max(
                       7,
                       Math.round(
-                        (item.value / maxValue) * (dashboard ? 200 : 152),
+                        (item.value / maxValue) * (dashboard ? 168 : 152),
                       ),
                     )
                   : 3;
@@ -118,6 +121,9 @@ export function TrendChart({
   activeLabel?: string;
   dashboard?: boolean;
 }) {
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const breakdownId = `${useId().replace(/:/g, "")}-monthly-breakdown`;
+
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <div
@@ -153,11 +159,29 @@ export function TrendChart({
             </p>
             <p className="mt-1 text-neutral-500 text-xs">{description}</p>
           </div>
-          <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-neutral-500 uppercase tracking-wide">
-            {badge}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-neutral-500 uppercase tracking-wide">
+              {badge}
+            </span>
+            <button
+              type="button"
+              className="inline-flex min-h-9 items-center gap-1 rounded-lg px-2 text-xs font-semibold text-brand-700 hover:bg-white lg:hidden"
+              aria-expanded={detailsOpen}
+              aria-controls={breakdownId}
+              onClick={() => setDetailsOpen((open) => !open)}
+            >
+              Detalle
+              <ChevronDown
+                className={`size-3.5 transition-transform motion-reduce:transition-none ${detailsOpen ? "rotate-180" : ""}`}
+                aria-hidden="true"
+              />
+            </button>
+          </div>
         </div>
-        <div className="mt-4 space-y-2">
+        <div
+          id={breakdownId}
+          className={`mt-4 space-y-2 ${detailsOpen ? "block" : "hidden lg:block"}`}
+        >
           {points.map((point) => (
             <div
               key={point.key}
