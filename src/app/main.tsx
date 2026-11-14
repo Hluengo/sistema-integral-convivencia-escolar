@@ -34,3 +34,13 @@ createRoot(rootEl).render(
 // the first render and initial Supabase/session work.
 // La telemetría no debe competir con el primer render ni con la carga del shell.
 window.setTimeout(() => initializeTelemetry(), 10_000);
+
+// Aplica las tipografías recién después del primer frame: con media="print"
+// el CSS de Google Fonts nunca bloquea el pintado.
+window.setTimeout(() => {
+  for (const link of document.querySelectorAll<HTMLLinkElement>(
+    "link[data-async-font]",
+  )) {
+    link.media = "all";
+  }
+}, 0);

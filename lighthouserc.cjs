@@ -9,6 +9,13 @@ module.exports = {
       numberOfRuns: 1,
       settings: {
         preset: "desktop",
+        // Sin estos flags Chrome se queda sin pintar y Lighthouse aborta con
+        // NO_FCP en runners y contenedores (poco /dev/shm, sin GPU).
+        chromeFlags: [
+          "--no-sandbox",
+          "--disable-dev-shm-usage",
+          "--disable-gpu",
+        ],
       },
     },
     assert: {

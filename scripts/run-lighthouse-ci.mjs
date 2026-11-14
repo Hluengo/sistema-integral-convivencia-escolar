@@ -39,6 +39,13 @@ child.on("error", (error) => {
 child.on("close", async (code) => {
   if (code === 0) return;
 
+  // NO_FCP significa que la página nunca pintó: es un fallo real, aunque el
+  // EPERM de limpieza de Chrome en Windows lo disfrace de éxito.
+  if (/\bNO_FCP\b/.test(stderr)) {
+    process.exitCode = code ?? 1;
+    return;
+  }
+
   const isWindowsCleanupError = /EPERM, Permission denied:.*lighthouse\./s.test(
     stderr,
   );
