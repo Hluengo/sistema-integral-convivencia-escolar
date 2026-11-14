@@ -170,10 +170,12 @@ function DashboardActionQueue({
   actions,
   privacyMode,
   onOpen,
+  onViewAll,
 }: {
   actions: DashboardAction[];
   privacyMode: boolean;
   onOpen?: (causaId: string) => void;
+  onViewAll?: () => void;
 }) {
   if (actions.length === 0) {
     return (
@@ -187,7 +189,7 @@ function DashboardActionQueue({
   return (
     <section
       aria-labelledby="dashboard-action-queue-title"
-      className="rounded-2xl border border-gravisima-200/80 border-l-4 border-l-gravisima-500 bg-white px-5 py-5 shadow-sm ring-1 ring-black/[0.02]"
+      className="rounded-xl border border-gravisima-200/80 border-l-4 border-l-gravisima-500 bg-white p-4 shadow-sm sm:p-5"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
@@ -201,9 +203,21 @@ function DashboardActionQueue({
             Expedientes que requieren atención por plazo.
           </p>
         </div>
-        <span className="rounded-full bg-gravisima-50 px-2.5 py-1 font-bold text-gravisima-700 text-xs">
-          {actions.length}
-        </span>
+        <div className="flex shrink-0 items-center gap-2">
+          <span className="rounded-full bg-gravisima-50 px-2.5 py-1 font-bold text-gravisima-700 text-xs">
+            {actions.length}
+          </span>
+          {onViewAll ? (
+            <button
+              type="button"
+              onClick={onViewAll}
+              className="inline-flex min-h-11 items-center gap-1 rounded-lg px-2 font-semibold text-brand-700 text-xs hover:bg-brand-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            >
+              Ver todos
+              <ArrowRight className="size-3.5" aria-hidden="true" />
+            </button>
+          ) : null}
+        </div>
       </div>
       <div className="divide-y divide-neutral-100">
         {actions.slice(0, 5).map((action) => (
@@ -497,6 +511,7 @@ export default function DashboardStats({
                 }
               : undefined
           }
+          onViewAll={onNavigate ? () => onNavigate("causas") : undefined}
         />
       ) : null}
 
