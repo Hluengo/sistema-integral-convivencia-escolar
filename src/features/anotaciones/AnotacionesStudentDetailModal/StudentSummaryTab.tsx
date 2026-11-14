@@ -164,10 +164,10 @@ export default function StudentSummaryTab({
   const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      <div className="flex flex-col gap-5">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div className="flex flex-col gap-4">
         <section
-          className={`flex-1 rounded-xl border ${style.border} bg-white p-4 shadow-sm sm:p-5`}
+          className={`flex-1 rounded-xl border ${style.border} bg-white p-4 shadow-sm`}
         >
           <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -193,8 +193,8 @@ export default function StudentSummaryTab({
             </span>
           </div>
 
-          <div className="mt-4 flex flex-col gap-3">
-            <div className="flex items-center justify-between rounded-xl border border-gravisima-100 bg-gravisima-50/50 p-4">
+          <div className="mt-3 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between rounded-xl border border-gravisima-100 bg-gravisima-50/50 p-3">
               <div>
                 <p className="text-xs font-semibold text-gravisima-700">
                   Negativas registradas
@@ -210,7 +210,7 @@ export default function StudentSummaryTab({
                 <AlertTriangle className="size-4" />
               </span>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-leve-100 bg-leve-50/50 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-leve-100 bg-leve-50/50 p-3">
               <div>
                 <p className="text-xs font-semibold text-leve-700">Positivas</p>
                 <p className="text-3xl font-extrabold tabular-nums text-leve-600">
@@ -224,7 +224,7 @@ export default function StudentSummaryTab({
                 <CheckCircle2 className="size-4" />
               </span>
             </div>
-            <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50/50 p-3">
               <div>
                 <p className="text-xs font-semibold text-blue-700">
                   Informativas
@@ -244,9 +244,9 @@ export default function StudentSummaryTab({
         </section>
       </div>
 
-      <div className="flex flex-col gap-5">
-        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2.5">
+      <div className="flex flex-col gap-4">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2.5">
             <FileText className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h4 className="text-sm font-bold text-neutral-900">
               Carta y estado del trámite
@@ -283,8 +283,8 @@ export default function StudentSummaryTab({
           )}
         </section>
 
-        <section className="rounded-xl border border-neutral-200 bg-white p-5 shadow-sm">
-          <div className="mb-4 flex items-center gap-2.5">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-2.5">
             <Sparkles className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h4 className="text-sm font-bold text-neutral-900">
               Análisis más reciente del PDF
@@ -320,7 +320,7 @@ export default function StudentSummaryTab({
         </section>
 
         <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex items-start justify-between gap-3">
+          <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <Gauge className="h-4 w-4 text-brand-600" aria-hidden="true" />
@@ -361,7 +361,7 @@ export default function StudentSummaryTab({
         </section>
       </div>
 
-      <div className="flex flex-col gap-5">
+      <div className="flex flex-col gap-4">
         <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center gap-2">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70 text-brand-700">
