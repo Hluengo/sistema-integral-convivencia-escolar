@@ -4,11 +4,9 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
-  Clock3,
   FileText,
   Gauge,
   Info,
-  Lightbulb,
   BarChart3,
   Shield,
   Sparkles,
@@ -23,8 +21,6 @@ import {
   getDisciplinaryStage,
   getNextThreshold,
   getStageProgress,
-  getSuggestedLetterType,
-  mapDocTypeToLetterType,
 } from "@/shared/lib/domain/disciplinaryStage";
 import { formatDate, STAGE_STYLE } from "./constants";
 import {
@@ -87,24 +83,6 @@ function deduplicateDetectedAnnotations(
   return [...unique.values()];
 }
 
-function getActionText(
-  negativeCount: number,
-  currentCarta: CartaDisciplinaria | null,
-): string {
-  const suggested = getSuggestedLetterType(
-    negativeCount,
-    currentCarta?.letter_type,
-  );
-  if (!suggested) {
-    if (negativeCount < 5)
-      return "Mantener seguimiento regular. No corresponde emitir carta disciplinaria.";
-    return "Mantener la carta vigente y seguimiento del estudiante.";
-  }
-  const letterType = mapDocTypeToLetterType(suggested);
-  if (suggested === "derivacion") return `Escalar a ${letterType}.`;
-  return `Tramitar ${letterType}.`;
-}
-
 export default function StudentSummaryTab({
   annotations,
   detectedAnnotations,
@@ -157,11 +135,6 @@ export default function StudentSummaryTab({
   const progress = getStageProgress(counts.negativas);
   const nextThreshold = getNextThreshold(counts.negativas);
   const style = STAGE_STYLE[stage.key];
-  const suggestedDocType = getSuggestedLetterType(
-    counts.negativas,
-    currentCarta?.letter_type,
-  );
-  const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
 
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -362,29 +335,6 @@ export default function StudentSummaryTab({
       </div>
 
       <div className="flex flex-col gap-4">
-        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
-          <div className="flex items-center gap-2">
-            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-white/70 text-brand-700">
-              <Lightbulb className="h-4 w-4" aria-hidden="true" />
-            </span>
-            <h3 className="text-sm font-bold text-neutral-900">
-              Siguiente acción sugerida
-            </h3>
-          </div>
-          <p className="mt-4 text-xs leading-relaxed text-neutral-600">
-            {getActionText(counts.negativas, currentCarta)}
-          </p>
-          {suggestedLetterType && (
-            <div className="mt-4 flex items-start gap-2 rounded-lg border border-neutral-200 bg-neutral-50 p-2.5 text-xs font-medium text-neutral-600">
-              <Clock3
-                className="mt-0.5 size-4 shrink-0 text-gravisima-600"
-                aria-hidden="true"
-              />
-              <span>Documento sugerido: {suggestedLetterType}</span>
-            </div>
-          )}
-        </section>
-
         <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-brand-600" aria-hidden="true" />
