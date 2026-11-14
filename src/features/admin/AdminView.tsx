@@ -277,7 +277,7 @@ export default function AdminView() {
             type="button"
             key={id}
             onClick={() => setActiveTab(id)}
-            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-xs transition-colors sm:px-4 ${activeTab === id ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"}`}
+            className={`flex min-h-11 shrink-0 items-center gap-2 rounded-xl px-3 py-2.5 font-semibold text-sm transition-colors sm:px-4 ${activeTab === id ? "bg-neutral-900 text-white" : "text-neutral-500 hover:bg-neutral-100 hover:text-neutral-800"}`}
             aria-pressed={activeTab === id}
           >
             <Icon className="size-4" aria-hidden="true" /> {label}

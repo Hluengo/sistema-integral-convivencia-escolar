@@ -2,7 +2,7 @@
 
 export default function AppFooter() {
   return (
-    <footer className="mt-auto space-y-1.5 border-neutral-200/60 border-t bg-white py-5 text-center text-10px text-neutral-500 sm:py-6">
+    <footer className="mt-auto space-y-1.5 border-neutral-200/60 border-t bg-white py-5 text-center text-xs text-neutral-500 sm:py-6">
       <div className="flex flex-wrap items-center justify-center gap-2 px-4 font-medium text-neutral-500">
         <span className="font-semibold text-brand-700">Gestión Integral</span>
         <span aria-hidden="true">·</span>

@@ -225,7 +225,7 @@ function SidebarContent({
                   onViewChange(item.id);
                   onNavigate?.();
                 }}
-                className={`group relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-13px transition-all duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
+                className={`group relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-sm transition-all duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
                 ${
                   isActive
                     ? "border-brand-100 bg-brand-50 font-semibold text-brand-800 shadow-sm before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-600"

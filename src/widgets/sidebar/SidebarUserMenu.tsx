@@ -60,7 +60,7 @@ export function SidebarUserMenu({
             <p className="truncate font-semibold text-neutral-800 text-xs">
               {user.email}
             </p>
-            <p className="text-10px text-neutral-600">Conectado</p>
+            <p className="text-xs text-neutral-600">Conectado</p>
           </div>
         )}
         <button

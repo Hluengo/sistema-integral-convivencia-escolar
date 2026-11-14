@@ -310,7 +310,7 @@ export default function AiAdvisor() {
             <Send className="h-3.5 w-3.5" aria-hidden="true" />
           </Button>
         </form>
-        <div className="mt-2 text-left font-mono text-10px text-neutral-600">
+        <div className="mt-2 text-left font-mono text-xs text-neutral-600">
           Revisa el procedimiento, no decide ni sanciona. Consulte siempre el
           RIE de su sostenedor y la normativa vigente.
         </div>

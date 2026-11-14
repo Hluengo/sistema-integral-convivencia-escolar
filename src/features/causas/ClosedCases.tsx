@@ -137,7 +137,7 @@ function ClosedCases({
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as "fecha" | "nombre")}
-            className="rounded-lg border border-neutral-200 bg-white p-1.5 font-medium text-10px text-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+            className="rounded-lg border border-neutral-200 bg-white p-1.5 font-medium text-xs text-neutral-600 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             aria-label="Ordenar por"
           >
             <option value="fecha">Más recientes</option>
@@ -274,7 +274,7 @@ function ClosedCases({
                       <Button
                         size="sm"
                         onClick={() => onSelectCausa(causa)}
-                        className="rounded-lg px-3 py-1.5 text-10px"
+                        className="rounded-lg px-3 py-1.5 text-xs"
                         title="Ver detalle del caso"
                       >
                         <FileText className="h-3 w-3" aria-hidden="true" />
@@ -285,7 +285,7 @@ function ClosedCases({
                           size="sm"
                           variant="custom"
                           onClick={() => setCausaToReopen(causa)}
-                          className="rounded-lg border border-grave-200 bg-grave-50 px-3 py-1.5 text-10px text-grave-700 hover:bg-grave-100"
+                          className="rounded-lg border border-grave-200 bg-grave-50 px-3 py-1.5 text-xs text-grave-700 hover:bg-grave-100"
                           title="Reabrir caso"
                         >
                           <RotateCcw className="h-3 w-3" aria-hidden="true" />

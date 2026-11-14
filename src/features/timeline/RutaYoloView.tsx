@@ -737,7 +737,7 @@ export default function RutaYoloView({
                                 </span>
                               </label>
                               {causa.incidenteId && (
-                                <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-10px text-brand-950">
+                                <label className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-xs text-brand-950">
                                   <input
                                     aria-label="Compartir evidencia adicional con el incidente grupal"
                                     type="checkbox"

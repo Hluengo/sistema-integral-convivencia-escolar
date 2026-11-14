@@ -309,7 +309,7 @@ const BitacoraTabContent = memo(function BitacoraTabContent({
                 {causa.incidenteId && (
                   <label
                     htmlFor="manual-log-share"
-                    className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-10px text-brand-950 sm:col-span-2"
+                    className="flex min-h-11 cursor-pointer items-start gap-2 rounded-lg border border-brand-200 bg-brand-50/50 p-2.5 text-xs text-brand-950 sm:col-span-2"
                   >
                     <input
                       id="manual-log-share"

@@ -295,7 +295,7 @@ export default function NewIncidenteModal({
                 </select>
                 <p
                   id="group-students-help"
-                  className="mt-1 text-10px text-neutral-500"
+                  className="mt-1 text-xs text-neutral-500"
                 >
                   Mantenga Ctrl o Cmd para seleccionar varios estudiantes.
                 </p>

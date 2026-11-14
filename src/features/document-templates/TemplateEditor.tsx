@@ -292,7 +292,7 @@ export default function TemplateEditor() {
               type="button"
               key={tpl.id}
               onClick={() => handleSelect(tpl)}
-              className={`w-full border-neutral-100 border-b px-3 py-2.5 text-left font-medium text-10px transition-colors ${
+              className={`w-full border-neutral-100 border-b px-3 py-2.5 text-left font-medium text-xs transition-colors ${
                 selectedId === tpl.id
                   ? "border-l-2 border-l-brand-600 bg-brand-50 text-brand-700"
                   : "text-neutral-600 hover:bg-neutral-100"
@@ -327,7 +327,7 @@ export default function TemplateEditor() {
                     size="sm"
                     onClick={handleSave}
                     disabled={saving !== null}
-                    className="rounded-lg px-3 py-1.5 text-10px disabled:bg-neutral-300"
+                    className="rounded-lg px-3 py-1.5 text-xs disabled:bg-neutral-300"
                   >
                     {saving === selectedId ? (
                       <Loader2 className="h-3 w-3 animate-spin" />

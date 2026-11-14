@@ -77,7 +77,7 @@ export default function IncidentePanel({
           <button
             type="button"
             onClick={() => setIsCollapsed((current) => !current)}
-            className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-white px-2.5 py-1 font-semibold text-10px text-brand-800 transition-colors hover:bg-brand-50"
+            className="inline-flex items-center gap-1 rounded-lg border border-brand-200 bg-white px-2.5 py-1 font-semibold text-xs text-brand-800 transition-colors hover:bg-brand-50"
             aria-expanded={!isCollapsed}
             aria-controls="incident-group-details"
           >
@@ -136,7 +136,7 @@ export default function IncidentePanel({
           {data.causas.map((linkedCausa) => (
             <span
               key={linkedCausa.id}
-              className="rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-10px text-brand-950"
+              className="rounded-lg border border-brand-200 bg-white px-2.5 py-1.5 text-xs text-brand-950"
             >
               <strong>
                 {privacyMode
@@ -189,7 +189,7 @@ export default function IncidentePanel({
                         onClick={() =>
                           void openDocument(activity.documentUrl || "")
                         }
-                        className="mt-1.5 inline-flex items-center gap-1 font-semibold text-info-700 text-10px hover:underline"
+                        className="mt-1.5 inline-flex items-center gap-1 font-semibold text-info-700 text-xs hover:underline"
                       >
                         <File className="size-3" aria-hidden="true" />
                         {activity.documentName || "Ver documento adjunto"}

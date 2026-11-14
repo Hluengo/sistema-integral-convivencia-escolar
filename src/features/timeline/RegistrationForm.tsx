@@ -167,7 +167,7 @@ export default function RegistrationForm({
           </legend>
           <label
             htmlFor={`reg-share-${item.id}`}
-            className="mt-1 flex min-h-11 cursor-pointer items-start gap-2 text-10px text-brand-950"
+            className="mt-1 flex min-h-11 cursor-pointer items-start gap-2 text-xs text-brand-950"
           >
             <input
               id={`reg-share-${item.id}`}
