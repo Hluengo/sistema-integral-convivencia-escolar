@@ -137,10 +137,10 @@ export default function StudentSummaryTab({
   const style = STAGE_STYLE[stage.key];
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-3 lg:items-start">
       <div className="flex flex-col gap-4">
         <section
-          className={`flex-1 rounded-xl border ${style.border} bg-white p-4 shadow-sm`}
+          className={`rounded-xl border ${style.border} bg-white p-4 shadow-sm`}
         >
           <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -292,7 +292,7 @@ export default function StudentSummaryTab({
           )}
         </section>
 
-        <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
@@ -335,7 +335,7 @@ export default function StudentSummaryTab({
       </div>
 
       <div className="flex flex-col gap-4">
-        <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
+        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h3 className="text-sm font-bold text-neutral-900">
