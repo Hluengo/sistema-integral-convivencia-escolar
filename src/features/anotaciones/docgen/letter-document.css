@@ -496,8 +496,13 @@
   .letter-document {
     width: 216mm;
     min-width: 216mm;
-    height: 279mm;
-    min-height: 279mm;
+    /* height fijo + overflow hidden recortaba el excedente en silencio:
+       el contenido sobrante debe pasar a otra hoja, no desaparecer. */
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    break-after: auto;
+    page-break-after: auto;
     box-shadow: none !important;
     border: none !important;
     border-radius: 0 !important;

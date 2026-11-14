@@ -145,8 +145,17 @@ describe("letter-document — Formato Carta (216x279mm)", () => {
     );
   });
 
-  it("print media query debe usar dimensiones Carta", () => {
-    ok(css.includes("height: 279mm"), "@media print debe usar 279mm");
+  it("en impresión el documento no se recorta: fluye a otra hoja", () => {
+    const printBlock = css.slice(css.indexOf("@media print"));
+    ok(printBlock.includes("height: auto"), "height debe ser auto al imprimir");
+    ok(
+      printBlock.includes("overflow: visible"),
+      "overflow debe ser visible al imprimir",
+    );
+    ok(
+      !printBlock.includes("height: 279mm"),
+      "no debe fijar altura de hoja única al imprimir",
+    );
   });
 });
 

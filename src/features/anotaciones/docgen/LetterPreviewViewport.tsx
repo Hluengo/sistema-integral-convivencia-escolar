@@ -24,14 +24,21 @@ export default function LetterPreviewViewport({
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
 
+  // El callback suele llegar como arrow memorizada: se lee por ref para que
+  // los observadores no dependan de su identidad.
+  const onOverflowChangeRef = useRef(onOverflowChange);
+  useEffect(() => {
+    onOverflowChangeRef.current = onOverflowChange;
+  }, [onOverflowChange]);
+
   const checkOverflow = useCallback(() => {
     const el = containerRef.current?.querySelector(
       ".letter-document",
     ) as HTMLElement | null;
     if (!el) return;
     const overflow = el.scrollHeight > el.clientHeight + 2;
-    onOverflowChange?.(overflow);
-  }, [onOverflowChange]);
+    onOverflowChangeRef.current?.(overflow);
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -45,16 +52,27 @@ export default function LetterPreviewViewport({
     };
 
     updateScale();
-
-    const observer = new ResizeObserver(updateScale);
-    observer.observe(container);
-
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
     checkOverflow();
-  }, [scale, checkOverflow]);
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateScale();
+      checkOverflow();
+    });
+    resizeObserver.observe(container);
+
+    // El texto cambia sin que cambie el ancho: hay que volver a medir.
+    const mutationObserver = new MutationObserver(checkOverflow);
+    mutationObserver.observe(container, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    });
+
+    return () => {
+      resizeObserver.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [checkOverflow]);
 
   return (
     <div

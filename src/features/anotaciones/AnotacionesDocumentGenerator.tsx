@@ -308,8 +308,8 @@ export default function AnotacionesDocumentGenerator({
           role="alert"
           className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
         >
-          El contenido supera una pagina Carta (216 x 279 mm). Reduzca el texto
-          o utilice una version de varias paginas antes de imprimir.
+          El contenido supera una hoja Carta (216 x 279 mm) y se imprimirá en
+          más de una hoja. Reduzca el texto si desea que quepa en una sola.
         </div>
       )}
 

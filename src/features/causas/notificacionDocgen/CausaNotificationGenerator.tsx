@@ -320,9 +320,8 @@ export default function CausaNotificationGenerator({
           role="alert"
           className="rounded-xl border border-grave-200 bg-grave-50 p-4 text-sm text-grave-700"
         >
-          El contenido supera una hoja Carta (216 x 279 mm). Reduzca el texto o
-          revise el documento antes de imprimir: el excedente se corta en la
-          impresión.
+          El contenido supera una hoja Carta (216 x 279 mm) y se imprimirá en
+          más de una hoja. Reduzca el texto si desea que quepa en una sola.
         </div>
       )}
 
