@@ -164,10 +164,10 @@ export default function StudentSummaryTab({
   const suggestedLetterType = mapDocTypeToLetterType(suggestedDocType);
 
   return (
-    <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       <div className="flex flex-col gap-5">
         <section
-          className={`rounded-xl border ${style.border} bg-white p-4 shadow-sm sm:p-5`}
+          className={`flex-1 rounded-xl border ${style.border} bg-white p-4 shadow-sm sm:p-5`}
         >
           <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
             <div>
@@ -240,47 +240,6 @@ export default function StudentSummaryTab({
                 <Info className="size-4" />
               </span>
             </div>
-          </div>
-        </section>
-
-        <section className="h-fit self-start rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
-          <div className="mb-4 flex items-start justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <Gauge className="h-4 w-4 text-brand-600" aria-hidden="true" />
-                <h4 className="text-sm font-bold text-neutral-900">
-                  Progreso disciplinario
-                </h4>
-              </div>
-              <p className="mt-0.5 text-xs text-neutral-500">
-                Umbral de gravedad para medida socioeducativa superior
-              </p>
-            </div>
-            <span className="inline-flex items-center rounded bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-600">
-              Umbral: {nextThreshold ?? "máximo"}
-            </span>
-          </div>
-          <div
-            role="progressbar"
-            aria-valuenow={Math.round(progress.percent)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Progreso disciplinario: ${counts.negativas} negativas`}
-            className="h-3 overflow-hidden rounded-full bg-neutral-100 p-0.5"
-          >
-            <div
-              className="h-full rounded-full bg-brand-600 transition-[width]"
-              style={{ width: `${progress.percent}%` }}
-            />
-          </div>
-          <div className="mt-2 flex justify-between gap-3 text-[11px] font-medium text-neutral-500">
-            <span>Rango regular (0-5)</span>
-            <span className="font-bold text-gravisima-600">
-              {nextThreshold === null
-                ? "Umbral máximo alcanzado"
-                : `Faltan ${progress.remaining} para ${nextThreshold}`}
-            </span>
-            <span>Crítico (10+)</span>
           </div>
         </section>
       </div>
@@ -359,6 +318,47 @@ export default function StudentSummaryTab({
             </Button>
           )}
         </section>
+
+        <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm">
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Gauge className="h-4 w-4 text-brand-600" aria-hidden="true" />
+                <h4 className="text-sm font-bold text-neutral-900">
+                  Progreso disciplinario
+                </h4>
+              </div>
+              <p className="mt-0.5 text-xs text-neutral-500">
+                Umbral de gravedad para medida socioeducativa superior
+              </p>
+            </div>
+            <span className="inline-flex items-center rounded bg-neutral-100 px-2.5 py-1 text-xs font-semibold text-neutral-600">
+              Umbral: {nextThreshold ?? "máximo"}
+            </span>
+          </div>
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progress.percent)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Progreso disciplinario: ${counts.negativas} negativas`}
+            className="h-3 overflow-hidden rounded-full bg-neutral-100 p-0.5"
+          >
+            <div
+              className="h-full rounded-full bg-brand-600 transition-[width]"
+              style={{ width: `${progress.percent}%` }}
+            />
+          </div>
+          <div className="mt-2 flex justify-between gap-3 text-[11px] font-medium text-neutral-500">
+            <span>Rango regular (0-5)</span>
+            <span className="font-bold text-gravisima-600">
+              {nextThreshold === null
+                ? "Umbral máximo alcanzado"
+                : `Faltan ${progress.remaining} para ${nextThreshold}`}
+            </span>
+            <span>Crítico (10+)</span>
+          </div>
+        </section>
       </div>
 
       <div className="flex flex-col gap-5">
@@ -385,7 +385,7 @@ export default function StudentSummaryTab({
           )}
         </section>
 
-        <section className="rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
+        <section className="flex-1 rounded-xl border border-neutral-200 bg-white p-4 shadow-sm sm:p-5">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-brand-600" aria-hidden="true" />
             <h3 className="text-sm font-bold text-neutral-900">
