@@ -2,7 +2,6 @@
 
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import {
-  Check,
   Download,
   ExternalLink,
   FileText,
@@ -16,14 +15,11 @@ import type {
   FaseProcedimental,
 } from "../../shared/lib/types";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
-import {
-  getCausaDeadline,
-  getCausaDeadlineStages,
-} from "../causas/causaPresentation";
 import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
 import { getPhaseTone } from "../../shared/lib/domain/phaseTones";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
 import RegistrationForm from "./RegistrationForm";
+import RutaYoloPhaseRail from "./RutaYoloPhaseRail";
 import HistoryEntryForm from "../../shared/ui/HistoryEntryForm";
 import {
   DOCUMENT_UPLOAD_ACCEPT,
@@ -52,33 +48,6 @@ function defaultItem(items: ChecklistItem[]) {
   );
 }
 
-function formatDeadlineDate(value?: string) {
-  if (!value) return null;
-  const date = new Date(`${value}T12:00:00Z`);
-  if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat("es-CL", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    timeZone: "UTC",
-  }).format(date);
-}
-
-function getItemDeadline(item: ChecklistItem, causa: Causa) {
-  if (item.fechaLimite) return formatDeadlineDate(item.fechaLimite);
-  if (item.id === "chk_rec_3") return formatDeadlineDate(causa.fechaLimite24h);
-
-  const investigationDeadline = getCausaDeadline(causa).deadlineDate;
-  const stages = getCausaDeadlineStages(causa);
-  if (item.id.startsWith("chk_inv_")) {
-    return formatDeadlineDate(investigationDeadline);
-  }
-  if (item.id.startsWith("chk_res_")) {
-    return formatDeadlineDate(stages.informeConcluyente?.deadlineDate);
-  }
-  return null;
-}
-
 export default function RutaYoloView({
   causa,
   currentFase,
@@ -87,7 +56,6 @@ export default function RutaYoloView({
 }: RutaYoloViewProps) {
   const summary = getCausaOperationalSummary(causa);
   const activePhase = selectedPhase ?? (currentFase as FaseProcedimental);
-  const activeTone = getPhaseTone(activePhase);
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
   const [expandedPhase, setExpandedPhase] = useState<FaseProcedimental | null>(
     null,
@@ -244,158 +212,23 @@ export default function RutaYoloView({
         </div>
       </div>
       <div className="card grid min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[400px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-neutral-200 border-b bg-neutral-50/50 lg:border-r lg:border-b-0">
-          <div className="border-neutral-200 border-b px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="font-bold text-neutral-950 text-sm uppercase tracking-wider">
-                  Índice foliado · Etapa {activePhaseIndex + 1}
-                </p>
-                <p className="mt-1 text-neutral-600 text-[11px]">
-                  Actuaciones de la fase actual
-                </p>
-              </div>
-              <span
-                className={`rounded-full px-2 py-1 font-semibold text-10px ${activeTone.softBg} ${activeTone.softText}`}
-              >
-                {phaseItems.length} hitos
-              </span>
-            </div>
-          </div>
-
-          <div className="min-h-0 flex-1 overflow-y-auto p-2">
-            <div className="space-y-2">
-              {summary.phaseProgress.map((phase) => {
-                const phaseName = phase.phase as FaseProcedimental;
-                const items = getApplicableChecklistItems(causa, phaseName);
-                const tone = getPhaseTone(phaseName);
-                const isExpanded = phaseName === expandedPhase;
-                const isCurrent = phaseName === summary.currentPhase;
-
-                return (
-                  <section
-                    key={phase.phase}
-                    className={`overflow-hidden rounded-xl border bg-white ${tone.frame}`}
-                  >
-                    <button
-                      type="button"
-                      onClick={() => selectPhase(phaseName)}
-                      className="flex w-full items-center justify-between gap-2 px-3 py-2.5 text-left transition hover:bg-neutral-50"
-                      aria-expanded={isExpanded}
-                      aria-label={`${isExpanded ? "Ocultar" : "Mostrar"} hitos de ${phase.phase}`}
-                    >
-                      <span
-                        className={`font-semibold text-xs ${isExpanded ? tone.strongText : "text-neutral-700"}`}
-                      >
-                        {phase.phase}
-                      </span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 font-bold text-10px ${isCurrent ? `${tone.softBg} ${tone.softText}` : "bg-neutral-100 text-neutral-600"}`}
-                      >
-                        {phase.completed}/{phase.total}
-                      </span>
-                    </button>
-
-                    {isExpanded && (
-                      <div className="space-y-2 border-neutral-100 border-t bg-neutral-50/40 p-2">
-                        {items.map((item) => {
-                          const isSelected = item.id === selectedItemId;
-                          const deadline = getItemDeadline(item, causa);
-                          return (
-                            <div key={item.id}>
-                              <button
-                                type="button"
-                                onClick={() => setSelectedItemId(item.id)}
-                                className={`w-full rounded-lg border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${isSelected ? "border-emerald-500 bg-emerald-50/60 shadow-sm" : "border-neutral-200 bg-white hover:border-brand-300"}`}
-                                aria-pressed={isSelected}
-                                aria-label={`${item.label}: ${item.completado ? "registrado" : "pendiente"}`}
-                              >
-                                <div className="flex items-start gap-2.5">
-                                  <span
-                                    className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${item.completado ? "border-leve-600 bg-leve-600 text-white" : "border-neutral-300 bg-white text-transparent"}`}
-                                  >
-                                    <Check
-                                      className="size-3"
-                                      aria-hidden="true"
-                                    />
-                                  </span>
-                                  <span className="min-w-0">
-                                    <span className="block font-semibold text-neutral-900 text-[11px] leading-snug">
-                                      {item.label}
-                                    </span>
-                                    <span className="mt-1 block text-neutral-500 text-[10px] leading-snug">
-                                      {item.descripcion}
-                                    </span>
-                                    <span className="mt-1 flex flex-wrap gap-1 text-[9px] leading-snug">
-                                      <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
-                                        {item.requeridoPor}
-                                      </span>
-                                      {deadline && (
-                                        <span className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-700">
-                                          Plazo · {deadline}
-                                        </span>
-                                      )}
-                                      <span
-                                        className={`rounded px-1.5 py-0.5 ${item.completado ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                                      >
-                                        {item.completado
-                                          ? `Folio · ${item.fechaCompletado || "registrado"}`
-                                          : deadline
-                                            ? "Pendiente"
-                                            : "Sin fecha registrada"}
-                                      </span>
-                                    </span>
-                                    {item.completado && (
-                                      <span className="mt-1 block text-[9px] text-neutral-500">
-                                        Por:{" "}
-                                        {item.registradoPor ||
-                                          "Equipo de Convivencia Escolar"}
-                                      </span>
-                                    )}
-                                  </span>
-                                </div>
-                              </button>
-                              {item.id === "chk_imp_2" &&
-                                currentRole !== "docente" && (
-                                  <div className="mt-1 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-2 py-1.5">
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        void registerDeadlineExpiry()
-                                      }
-                                      disabled={
-                                        deadlineExpiryRegistered ||
-                                        isCreatingManualLog
-                                      }
-                                      className="w-full text-left text-[10px] font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
-                                    >
-                                      {deadlineExpiryRegistered
-                                        ? "✓ Plazo vencido registrado en historial"
-                                        : isCreatingManualLog
-                                          ? "Registrando…"
-                                          : "Registrar plazo vencido sin reconsideración o apelación"}
-                                    </button>
-                                    {manualLogError && (
-                                      <p
-                                        role="alert"
-                                        className="mt-1 text-[10px] text-red-700"
-                                      >
-                                        {manualLogError}
-                                      </p>
-                                    )}
-                                  </div>
-                                )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </section>
-                );
-              })}
-            </div>
-          </div>
-        </aside>
+        <RutaYoloPhaseRail
+          causa={causa}
+          phaseProgress={summary.phaseProgress}
+          currentPhase={summary.currentPhase}
+          activePhase={activePhase}
+          activePhaseIndex={activePhaseIndex}
+          phaseItems={phaseItems}
+          expandedPhase={expandedPhase}
+          selectedItemId={selectedItemId}
+          currentRole={currentRole}
+          onSelectPhase={selectPhase}
+          onSelectItem={setSelectedItemId}
+          deadlineExpiryRegistered={deadlineExpiryRegistered}
+          isCreatingManualLog={isCreatingManualLog}
+          manualLogError={manualLogError}
+          onRegisterDeadlineExpiry={() => void registerDeadlineExpiry()}
+        />
 
         <main className="min-w-0 bg-slate-50/50 p-2.5 sm:p-3">
           <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white">
