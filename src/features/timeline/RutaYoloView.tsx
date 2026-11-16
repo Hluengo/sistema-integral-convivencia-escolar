@@ -212,7 +212,7 @@ export default function RutaYoloView({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-3 border border-neutral-200 bg-white px-3 py-2 text-[10px] shadow-sm">
+      <div className="card flex flex-wrap items-center gap-3 px-3 py-2 text-xs">
         <span className="font-bold uppercase tracking-wide text-neutral-500">
           Etapas del debido proceso
         </span>
@@ -243,7 +243,7 @@ export default function RutaYoloView({
           })}
         </div>
       </div>
-      <div className="grid min-h-0 grid-cols-1 overflow-hidden rounded-xl border border-neutral-200 bg-white shadow-sm lg:grid-cols-[400px_minmax(0,1fr)]">
+      <div className="card grid min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[400px_minmax(0,1fr)]">
         <aside className="flex min-h-0 flex-col border-neutral-200 border-b bg-neutral-50/50 lg:border-r lg:border-b-0">
           <div className="border-neutral-200 border-b px-4 py-3">
             <div className="flex items-center justify-between gap-3">
@@ -398,7 +398,7 @@ export default function RutaYoloView({
         </aside>
 
         <main className="min-w-0 bg-slate-50/50 p-2.5 sm:p-3">
-          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">
+          <div className="flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-neutral-200 bg-white">
             <header className="flex flex-wrap items-center justify-between gap-3 border-neutral-200 border-b px-4 py-3">
               <div>
                 <div className="flex items-center gap-2">
