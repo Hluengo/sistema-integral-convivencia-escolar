@@ -45,7 +45,7 @@ export default memo(function Header({
 
       <div className="mx-auto flex h-[68px] max-w-[1440px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* Left: Mobile brand + Page title */}
-        <div className="flex min-w-0 flex-1 items-center gap-4 pl-10 lg:pl-0">
+        <div className="flex min-w-0 flex-1 items-center gap-4 pl-14 lg:pl-0">
           {/* Mobile brand */}
           <div className="flex shrink-0 items-center gap-2 lg:hidden">
             <img
