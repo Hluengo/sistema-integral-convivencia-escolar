@@ -1,6 +1,13 @@
 # Sesión actual
 
-**Actualizado:** 2026-10-23
+**Actualizado:** 2026-11-16
+
+## UI/dashboard — 16-11-2026
+
+- Extracciones visuales publicadas en `master`: `da33e5a9`, `d39a5744`, `11b15caa`, `f33da6ab`, `236a13b2` (focos prioritarios), `dae6598c` (resumen de etapas) y `c094257a` (`AnnotationStageCard` propio, corta un ciclo de imports entre módulos).
+- `cd5dcd92`: en móvil el logo quedaba bajo el botón fijo del menú; `Header` pasa de `pl-10` a `pl-14` (12 px de separación, sin desborde).
+- Auditoría visual autenticada en navegador QA (sesión activa) a 1440 y 375 px sobre Dashboard, Expedientes, Anotaciones, Asistente Legal y Estudiantes: sin desborde horizontal, 0 errores de consola, medidas 136/89/40/35 y rankings con datos reales; modo privacidad oculta nombres y se dejó desactivado.
+- Pendiente real: PDF con datos reales, staging multitenant, medición del fallback legacy y decisión de despliegue. Capturas y `.playwright-mcp` se borraron por contener datos de estudiantes.
 
 ## En curso — 22–23-10-2026
 
