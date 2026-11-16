@@ -27,7 +27,7 @@ export default function TeacherAnnotationRanking({
 
   return (
     <article
-      className="flex min-h-[610px] flex-col rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+      className="card flex min-h-[610px] flex-col p-4"
       aria-labelledby="teacher-annotation-ranking-title"
     >
       <div className="mb-4 flex items-start justify-between gap-3">

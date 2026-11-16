@@ -67,7 +67,7 @@ export default function RankingCard({
 
   return (
     <article
-      className="flex min-h-[610px] flex-col rounded-xl border border-[#e2e8f0] bg-white p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)]"
+      className="card flex min-h-[610px] flex-col p-4"
       aria-labelledby={titleId}
     >
       <div className="mb-4 flex items-center justify-between gap-2">

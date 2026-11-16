@@ -18,7 +18,7 @@ export default function PageHeader({
   action,
 }: PageHeaderProps) {
   return (
-    <header className="rounded-lg border border-neutral-200/80 bg-white px-5 py-4 shadow-xs sm:px-6">
+    <header className="card px-5 py-4 sm:px-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0">
           {eyebrow ? (
