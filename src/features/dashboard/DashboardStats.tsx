@@ -13,7 +13,7 @@ import {
 import { getStats } from "../../shared/lib/data";
 import { getCausaOperationalPhase } from "../causas/causaOperationalSummary";
 import { getCausaDeadline } from "../causas/causaPresentation";
-import { AlertCircle, Inbox } from "lucide-react";
+import { Inbox } from "lucide-react";
 import AnotacionesDashboardStats from "../anotaciones/AnotacionesDashboardStats";
 import EmptyState from "../../shared/EmptyState";
 import DashboardTrendsPanel from "./DashboardTrendsPanel";
@@ -22,6 +22,7 @@ import DashboardSeverityPanel from "./DashboardSeverityPanel";
 import DashboardMeasuresPanel from "./DashboardMeasuresPanel";
 import DashboardActionQueue from "./DashboardActionQueue";
 import DashboardExecutiveSummary from "./DashboardExecutiveSummary";
+import DashboardKpiError from "./DashboardKpiError";
 import {
   fetchAnnualAnnotationTrends,
   fetchAnnotationStageCounts,
@@ -393,32 +394,12 @@ export default function DashboardStats({
       </section>
 
       {kpiError ? (
-        <div
-          role="alert"
-          className="flex flex-col gap-3 rounded-xl border border-gravisima-200 bg-gravisima-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <AlertCircle className="h-5 w-5 shrink-0 text-gravisima-600" />
-            <div>
-              <p className="font-semibold text-neutral-800 text-sm">
-                Error al cargar los indicadores
-              </p>
-              <p className="text-neutral-600 text-xs">
-                No se pudieron obtener las métricas del dashboard.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              if (isAuthenticated) void annotationKpisQuery.refetch();
-              else void publicKpisQuery.refetch();
-            }}
-            className="inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg bg-white px-4 font-semibold text-neutral-800 text-xs ring-1 ring-neutral-200 transition-colors hover:bg-neutral-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
-          >
-            Reintentar
-          </button>
-        </div>
+        <DashboardKpiError
+          onRetry={() => {
+            if (isAuthenticated) void annotationKpisQuery.refetch();
+            else void publicKpisQuery.refetch();
+          }}
+        />
       ) : null}
 
       {isAuthenticated ? (
