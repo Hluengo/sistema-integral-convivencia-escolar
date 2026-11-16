@@ -8,7 +8,7 @@ import {
   Info,
 } from "lucide-react";
 import type { AnnotationStageCounts } from "../../shared/lib/domain/annotationStageCounts";
-import { AnnotationStageCard } from "../anotaciones/AnotacionesDashboardStats";
+import { AnnotationStageCard } from "../anotaciones/AnnotationStageCard";
 
 export default function DashboardMeasuresPanel({
   counts,

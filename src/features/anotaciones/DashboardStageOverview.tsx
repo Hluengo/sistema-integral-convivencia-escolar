@@ -11,7 +11,7 @@ import {
   FileWarning,
 } from "lucide-react";
 import type { AnnotationStageCounts } from "../../shared/lib/domain/annotationStageCounts";
-import { AnnotationStageCard } from "./AnotacionesDashboardStats";
+import { AnnotationStageCard } from "./AnnotationStageCard";
 
 export default function DashboardStageOverview({
   counts,
