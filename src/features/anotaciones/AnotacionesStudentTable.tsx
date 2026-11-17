@@ -446,7 +446,7 @@ export default memo(function AnotacionesStudentTable({
                           <button
                             type="button"
                             onClick={() => onSelectStudent(student)}
-                            className="cursor-pointer rounded-md text-left font-semibold text-neutral-900 transition-colors hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                            className="-my-3 inline-flex cursor-pointer items-center rounded-md py-3 text-left font-semibold text-neutral-900 transition-colors hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                             aria-label={`Ver detalle de ${studentLabel}`}
                           >
                             {maskName(student.full_name, privacyMode)}
