@@ -1,6 +1,6 @@
 # Sesión actual
 
-**Actualizado:** 2026-11-16
+**Actualizado:** 2026-11-17
 
 ## UI/dashboard — 16-11-2026
 
@@ -10,6 +10,7 @@
 - Tablet 768 px verificado en las cinco vistas (sin desborde, 20 px entre botón de menú y logo). Modales de Nuevo expediente y detalle revisados a 375 px: sin desborde, sin errores de consola; las pestañas de detalle tienen scroll horizontal propio (Historial alcanzable).
 - Multitenant (solo lectura, catálogo y advisors): 49 tablas en `public`; 41 con `tenant_id` y todas con RLS activo (solo `bulk_pdf_import_claims` sin políticas: uso exclusivo por RPC, correcto). Las 8 tablas sin `tenant_id` también tienen RLS; `coexistence_cases` queda bloqueada con `ALL:false` y `absences`/`tests` filtran por tenant vía estudiante/curso. `has_app_access` y `current_tenant_id` fijan `search_path`.
 - Advisors de producción pendientes de decisión: 4 funciones con `search_path` mutable, 5/24 funciones SECURITY DEFINER ejecutables por anon/authenticated, protección de contraseñas filtradas desactivada. Requieren migración o cambio de ajustes remotos.
+- `e747016c`: en la tabla de Anotaciones el botón con el nombre del estudiante medía 20 px de alto; ahora usa `-my-3 py-3` (44 px de área táctil) sin cambiar el alto de fila (46 px). Verificado en local y en producción (`AnotacionesView-CUQmfPgk.js`), 0 errores de consola.
 - Pendiente real: PDF con datos reales, validación multitenant con sesiones reales, medición del fallback legacy y decisión de despliegue. Capturas y `.playwright-mcp` se borraron por contener datos de estudiantes.
 
 ## En curso — 22–23-10-2026
