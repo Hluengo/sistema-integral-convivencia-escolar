@@ -7,7 +7,10 @@
 - Extracciones visuales publicadas en `master`: `da33e5a9`, `d39a5744`, `11b15caa`, `f33da6ab`, `236a13b2` (focos prioritarios), `dae6598c` (resumen de etapas) y `c094257a` (`AnnotationStageCard` propio, corta un ciclo de imports entre módulos).
 - `cd5dcd92`: en móvil el logo quedaba bajo el botón fijo del menú; `Header` pasa de `pl-10` a `pl-14` (12 px de separación, sin desborde).
 - Auditoría visual autenticada en navegador QA (sesión activa) a 1440 y 375 px sobre Dashboard, Expedientes, Anotaciones, Asistente Legal y Estudiantes: sin desborde horizontal, 0 errores de consola, medidas 136/89/40/35 y rankings con datos reales; modo privacidad oculta nombres y se dejó desactivado.
-- Pendiente real: PDF con datos reales, staging multitenant, medición del fallback legacy y decisión de despliegue. Capturas y `.playwright-mcp` se borraron por contener datos de estudiantes.
+- Tablet 768 px verificado en las cinco vistas (sin desborde, 20 px entre botón de menú y logo). Modales de Nuevo expediente y detalle revisados a 375 px: sin desborde, sin errores de consola; las pestañas de detalle tienen scroll horizontal propio (Historial alcanzable).
+- Multitenant (solo lectura, catálogo y advisors): 49 tablas en `public`; 41 con `tenant_id` y todas con RLS activo (solo `bulk_pdf_import_claims` sin políticas: uso exclusivo por RPC, correcto). Las 8 tablas sin `tenant_id` también tienen RLS; `coexistence_cases` queda bloqueada con `ALL:false` y `absences`/`tests` filtran por tenant vía estudiante/curso. `has_app_access` y `current_tenant_id` fijan `search_path`.
+- Advisors de producción pendientes de decisión: 4 funciones con `search_path` mutable, 5/24 funciones SECURITY DEFINER ejecutables por anon/authenticated, protección de contraseñas filtradas desactivada. Requieren migración o cambio de ajustes remotos.
+- Pendiente real: PDF con datos reales, validación multitenant con sesiones reales, medición del fallback legacy y decisión de despliegue. Capturas y `.playwright-mcp` se borraron por contener datos de estudiantes.
 
 ## En curso — 22–23-10-2026
 
