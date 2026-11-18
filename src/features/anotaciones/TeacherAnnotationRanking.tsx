@@ -27,7 +27,7 @@ export default function TeacherAnnotationRanking({
 
   return (
     <article
-      className="card flex min-h-[610px] flex-col p-4"
+      className="card flex lg:min-h-[610px] flex-col p-4"
       aria-labelledby="teacher-annotation-ranking-title"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
@@ -48,7 +48,7 @@ export default function TeacherAnnotationRanking({
             </p>
           </div>
         </div>
-        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-600 text-10px">
+        <span className="shrink-0 rounded-full bg-neutral-100 px-2 py-1 font-semibold text-neutral-600 text-xs">
           Top 5 Docentes
         </span>
       </div>
@@ -118,7 +118,7 @@ export default function TeacherAnnotationRanking({
                   </div>
                 </div>
 
-                <div className="mt-2 flex items-center justify-between gap-2 text-11px">
+                <div className="mt-2 flex items-center justify-between gap-2 text-xs">
                   <span className="font-medium text-grave-700">
                     {item.negative_count} negativas
                   </span>
@@ -153,7 +153,7 @@ export default function TeacherAnnotationRanking({
                   />
                 </div>
 
-                <div className="mt-1.5 grid grid-cols-3 gap-1 text-center text-10px tabular-nums">
+                <div className="mt-1.5 grid grid-cols-3 gap-1 text-center text-xs tabular-nums">
                   <Count
                     label="Negativas:"
                     value={item.negative_count}

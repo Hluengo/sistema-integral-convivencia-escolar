@@ -120,7 +120,7 @@ function SidebarBrand({ showText }: { showText: boolean }) {
           </h1>
           <p
             title={tenantName}
-            className="mt-0.5 truncate font-bold text-[10px] text-brand-700 uppercase leading-tight tracking-[0.16em]"
+            className="mt-0.5 truncate font-bold text-xs text-brand-700 uppercase leading-tight tracking-[0.16em]"
           >
             {tenantName}
           </p>
@@ -197,69 +197,88 @@ function SidebarContent({
         mobile={mobile}
       />
 
-      {(!isCollapsed || mobile) && (
-        <div className="px-5 pt-5 pb-2">
-          <span className="font-bold text-[10px] text-neutral-400 uppercase tracking-[0.18em]">
-            Espacio de trabajo
-          </span>
-        </div>
-      )}
-
       <nav
-        className={`flex-1 ${isCollapsed && !mobile ? "px-2 py-4" : "px-3"} space-y-1`}
+        className="min-h-0 flex-1 space-y-3 overflow-y-auto px-2 py-3"
         aria-label="Secciones principales"
       >
-        {navigationItems
-          .filter((item) => user || item.id === "dashboard")
-          .map((item) => {
-            const isActive = currentView === item.id;
-            const badge =
-              item.badgeKey === "activeCount" ? activeCount : undefined;
-            const Icon = item.Icon;
+        {(
+          [
+            ["Trabajo", ["dashboard", "causas", "anotaciones", "alumnos"]],
+            ["Análisis", ["reportes", "informes"]],
+            ["Administración", ["platform", "admin"]],
+          ] as const
+        ).map(([label, ids]) => {
+          const items = ids.flatMap((id) =>
+            navigationItems.filter(
+              (item) => item.id === id && (user || id === "dashboard"),
+            ),
+          );
+          if (!items.length) return null;
+          return (
+            <div
+              key={label}
+              role="group"
+              aria-label={label}
+              className="space-y-1"
+            >
+              {(!isCollapsed || mobile) && (
+                <p className="px-3 text-xs font-semibold text-neutral-600">
+                  {label}
+                </p>
+              )}
+              {items.map((item) => {
+                const isActive = currentView === item.id;
+                const badge =
+                  item.badgeKey === "activeCount" ? activeCount : undefined;
+                const Icon = item.Icon;
 
-            return (
-              <button
-                type="button"
-                key={item.id}
-                onClick={() => {
-                  onViewChange(item.id);
-                  onNavigate?.();
-                }}
-                className={`group relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-sm transition-all duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    onClick={() => {
+                      onViewChange(item.id);
+                      onNavigate?.();
+                    }}
+                    className={`group relative flex min-h-11 w-full cursor-pointer select-none items-center gap-3 rounded-xl border border-transparent font-medium text-sm transition-all duration-150 ${isCollapsed && !mobile ? "justify-center px-0" : "px-3"}
                 ${
                   isActive
                     ? "border-brand-100 bg-brand-50 font-semibold text-brand-800 shadow-sm before:absolute before:inset-y-2 before:left-0 before:w-0.5 before:rounded-full before:bg-brand-600"
                     : "text-neutral-600 hover:-translate-y-px hover:bg-neutral-50 hover:text-neutral-900 hover:shadow-xs"
                 }`}
-                aria-current={isActive ? "page" : undefined}
-                title={isCollapsed && !mobile ? item.label : undefined}
-              >
-                <span
-                  className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors ${isActive ? "bg-white text-brand-700 shadow-xs" : "text-neutral-500 group-hover:text-neutral-700"}`}
-                >
-                  <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
-                </span>
-                {(!isCollapsed || mobile) && (
-                  <>
-                    <span className="flex-1 truncate text-left">
-                      {item.label}
+                    aria-current={isActive ? "page" : undefined}
+                    aria-label={item.label}
+                    title={isCollapsed && !mobile ? item.label : undefined}
+                  >
+                    <span
+                      className={`flex size-8 shrink-0 items-center justify-center rounded-lg transition-colors ${isActive ? "bg-white text-brand-700 shadow-xs" : "text-neutral-500 group-hover:text-neutral-700"}`}
+                    >
+                      <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
                     </span>
-                    {badge !== undefined && badge > 0 && (
-                      <span
-                        className={`rounded-full px-1.5 py-0.5 font-bold text-xs tabular-nums ${
-                          isActive
-                            ? "bg-brand-700 text-white"
-                            : "bg-neutral-200 text-neutral-700"
-                        }`}
-                      >
-                        {badge}
-                      </span>
+                    {(!isCollapsed || mobile) && (
+                      <>
+                        <span className="flex-1 truncate text-left">
+                          {item.label}
+                        </span>
+                        {badge !== undefined && badge > 0 && (
+                          <span
+                            className={`rounded-full px-1.5 py-0.5 font-bold text-xs tabular-nums ${
+                              isActive
+                                ? "bg-brand-700 text-white"
+                                : "bg-neutral-200 text-neutral-700"
+                            }`}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </>
                     )}
-                  </>
-                )}
-              </button>
-            );
-          })}
+                  </button>
+                );
+              })}
+            </div>
+          );
+        })}
       </nav>
 
       {(!isCollapsed || mobile) && (
@@ -273,7 +292,7 @@ function SidebarContent({
               <p className="truncate font-semibold text-neutral-700 text-xs">
                 Superintendencia
               </p>
-              <p className="truncate text-neutral-500 text-[11px]">
+              <p className="truncate text-neutral-500 text-xs">
                 Protocolos MINEDUC
               </p>
             </div>

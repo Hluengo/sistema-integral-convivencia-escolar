@@ -177,6 +177,7 @@ export default function DashboardTrendsPanel({
   annotationTrendLoading = false,
   annotationTrendError = null,
 }: DashboardTrendsPanelProps) {
+  const [expanded, setExpanded] = useState(false);
   const [mode, setMode] = useState<TrendMode>("annotations");
   const summary = useMemo(
     () =>
@@ -214,207 +215,223 @@ export default function DashboardTrendsPanel({
   if (!hasData && !annotationTrendLoading && !annotationTrendError) return null;
 
   return (
-    <section
-      className="card p-4 sm:p-5"
-      aria-labelledby="dashboard-trends-title"
-    >
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <div className="mb-2 flex items-center gap-2">
-            <div className="rounded-lg bg-neutral-100 p-1.5">
-              <TrendingUp
-                className="h-3.5 w-3.5 text-neutral-500"
-                aria-hidden="true"
-              />
-            </div>
-            <h2
-              id="dashboard-trends-title"
-              className="font-semibold text-neutral-800 text-sm"
-            >
-              Tendencias de Anotaciones – Últimos 6 Meses
-            </h2>
-          </div>
-          <p className="max-w-2xl text-neutral-600 text-sm">
-            Datos observados de los últimos 6 meses hasta{" "}
-            <span className="font-semibold capitalize text-neutral-800">
-              {summary.lastObservedMonthLabel}
-            </span>
-            .
-          </p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2 text-xs">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 font-medium text-neutral-600">
-            <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
-            {summary.observedMonthCount} meses observados
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 font-medium text-neutral-600">
-            <Gauge className="h-3.5 w-3.5" aria-hidden="true" />
-            Cierre {summary.closureRate}%
-          </span>
-        </div>
-      </div>
-
-      <div className="hidden">
-        <SummaryMetric
-          icon={Activity}
-          label="Aperturas"
-          value={summary.openedTotal}
-          helper={`${summary.closedTotal} cierres registrados`}
-          tone="brand"
-        />
-        <SummaryMetric
-          icon={Gauge}
-          label="Brecha"
-          value={Math.max(summary.netLoadTotal, 0)}
-          helper={
-            summary.netLoadTotal > 0
-              ? "aperturas sobre cierres"
-              : "sin brecha observada"
-          }
-          tone={summary.netLoadTotal > 0 ? "grave" : "leve"}
-        />
-        <SummaryMetric
-          icon={ClipboardList}
-          label="Anotaciones"
-          value={annotationTrendLoading ? "..." : summary.annotationTotal}
-          helper={`${summary.positiveAnnotationShare}% positivas · ${summary.negativeAnnotationShare}% negativas`}
-          tone="neutral"
-        />
-        <SummaryMetric
-          icon={ShieldAlert}
-          label="Alta gravedad"
-          value={
-            annotationTrendLoading ? "..." : summary.highSeverityAnnotationTotal
-          }
-          helper={`${summary.highSeverityAnnotationShare}% de las anotaciones`}
-          tone="grave"
-        />
-      </div>
-
-      <div className="mt-4 rounded-lg border border-brand-100 bg-brand-50 px-4 py-3">
-        <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+    <section className="card p-3 sm:p-5" aria-label="Tendencias de anotaciones">
+      <button
+        type="button"
+        aria-controls="dashboard-trend-details"
+        aria-expanded={expanded}
+        onClick={() => setExpanded(!expanded)}
+        className="flex min-h-11 w-full items-center justify-between text-left text-sm font-semibold sm:hidden"
+      >
+        Tendencias mensuales{" "}
+        <span className="text-brand-700">
+          {expanded ? "Ocultar" : "Ver detalle"}
+        </span>
+      </button>
+      <div
+        id="dashboard-trend-details"
+        className={expanded ? "block" : "hidden sm:block"}
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
           <div className="min-w-0">
-            <div className="flex items-start gap-2">
-              <Sparkles
-                className="mt-0.5 size-4 shrink-0 text-brand-600"
-                aria-hidden="true"
-              />
-              <p className="font-semibold text-brand-900 text-sm">
-                {summary.primaryInsight}
+            <div className="mb-2 flex items-center gap-2">
+              <div className="rounded-lg bg-neutral-100 p-1.5">
+                <TrendingUp
+                  className="h-3.5 w-3.5 text-neutral-500"
+                  aria-hidden="true"
+                />
+              </div>
+              <h2
+                id="dashboard-trends-title"
+                className="font-semibold text-neutral-800 text-sm"
+              >
+                Tendencias de Anotaciones – Últimos 6 Meses
+              </h2>
+            </div>
+            <p className="max-w-2xl text-neutral-600 text-sm">
+              Datos observados de los últimos 6 meses hasta{" "}
+              <span className="font-semibold capitalize text-neutral-800">
+                {summary.lastObservedMonthLabel}
+              </span>
+              .
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 font-medium text-neutral-600">
+              <CalendarClock className="h-3.5 w-3.5" aria-hidden="true" />
+              {summary.observedMonthCount} meses observados
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1 font-medium text-neutral-600">
+              <Gauge className="h-3.5 w-3.5" aria-hidden="true" />
+              Cierre {summary.closureRate}%
+            </span>
+          </div>
+        </div>
+
+        <div className="hidden">
+          <SummaryMetric
+            icon={Activity}
+            label="Aperturas"
+            value={summary.openedTotal}
+            helper={`${summary.closedTotal} cierres registrados`}
+            tone="brand"
+          />
+          <SummaryMetric
+            icon={Gauge}
+            label="Brecha"
+            value={Math.max(summary.netLoadTotal, 0)}
+            helper={
+              summary.netLoadTotal > 0
+                ? "aperturas sobre cierres"
+                : "sin brecha observada"
+            }
+            tone={summary.netLoadTotal > 0 ? "grave" : "leve"}
+          />
+          <SummaryMetric
+            icon={ClipboardList}
+            label="Anotaciones"
+            value={annotationTrendLoading ? "..." : summary.annotationTotal}
+            helper={`${summary.positiveAnnotationShare}% positivas · ${summary.negativeAnnotationShare}% negativas`}
+            tone="neutral"
+          />
+          <SummaryMetric
+            icon={ShieldAlert}
+            label="Alta gravedad"
+            value={
+              annotationTrendLoading
+                ? "..."
+                : summary.highSeverityAnnotationTotal
+            }
+            helper={`${summary.highSeverityAnnotationShare}% de las anotaciones`}
+            tone="grave"
+          />
+        </div>
+
+        <div className="mt-3 rounded-lg border border-brand-100 sm:mt-4 bg-brand-50 px-4 py-3">
+          <div className="flex flex-col gap-2 md:flex-row md:items-start md:justify-between">
+            <div className="min-w-0">
+              <div className="flex items-start gap-2">
+                <Sparkles
+                  className="mt-0.5 size-4 shrink-0 text-brand-600"
+                  aria-hidden="true"
+                />
+                <p className="font-semibold text-brand-900 text-sm">
+                  {summary.primaryInsight}
+                </p>
+              </div>
+              <p className="mt-1 text-brand-800 text-xs">
+                {summary.secondaryInsight}
               </p>
             </div>
-            <p className="mt-1 text-brand-800 text-xs">
-              {summary.secondaryInsight}
-            </p>
           </div>
         </div>
-      </div>
 
-      <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <div className="flex items-center gap-2">
-            <BarChart3
-              className="h-4 w-4 text-neutral-500"
-              aria-hidden="true"
-            />
-            <p className="font-semibold text-neutral-700 text-sm">
-              Vista mensual
+        <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <BarChart3
+                className="h-4 w-4 text-neutral-500"
+                aria-hidden="true"
+              />
+              <p className="font-semibold text-neutral-700 text-sm">
+                Vista mensual
+              </p>
+            </div>
+            <p className="mt-1 text-neutral-500 text-xs">
+              {MODE_HELPER_TEXT[mode]}
             </p>
           </div>
-          <p className="mt-1 text-neutral-500 text-xs">
-            {MODE_HELPER_TEXT[mode]}
-          </p>
+          <div className="inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50 p-1 sm:w-auto">
+            {TREND_MODE_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              const active = mode === option.id;
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setMode(option.id)}
+                  className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md px-3 font-semibold text-xs transition-colors sm:flex-none ${
+                    active
+                      ? "bg-white text-neutral-900 shadow-sm"
+                      : "text-neutral-500 hover:bg-white/70 hover:text-neutral-800"
+                  }`}
+                >
+                  <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+                  {option.label}
+                </button>
+              );
+            })}
+          </div>
         </div>
-        <div className="inline-flex w-full rounded-lg border border-neutral-200 bg-neutral-50 p-1 sm:w-auto">
-          {TREND_MODE_OPTIONS.map((option) => {
-            const Icon = option.icon;
-            const active = mode === option.id;
-            return (
-              <button
-                key={option.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => setMode(option.id)}
-                className={`flex min-h-11 flex-1 items-center justify-center gap-1.5 rounded-md px-3 font-semibold text-xs transition-colors sm:flex-none ${
-                  active
-                    ? "bg-white text-neutral-900 shadow-sm"
-                    : "text-neutral-500 hover:bg-white/70 hover:text-neutral-800"
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-                {option.label}
-              </button>
-            );
-          })}
+
+        <div className="mt-3">
+          <TrendChart
+            points={chartPoints}
+            legend={activeModeTotals}
+            title="Resumen mensual"
+            description="Meses futuros se muestran pendientes."
+            badge={
+              TREND_MODE_OPTIONS.find((option) => option.id === mode)?.label ??
+              "Vista"
+            }
+            activeLabel="Mes actual"
+            dashboard
+          />
         </div>
-      </div>
 
-      <div className="mt-3">
-        <TrendChart
-          points={chartPoints}
-          legend={activeModeTotals}
-          title="Resumen mensual"
-          description="Meses futuros se muestran pendientes."
-          badge={
-            TREND_MODE_OPTIONS.find((option) => option.id === mode)?.label ??
-            "Vista"
-          }
-          activeLabel="Mes actual"
-          dashboard
-        />
-      </div>
+        {annotationTrendError ? (
+          <div
+            role="alert"
+            className="mt-4 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 px-3 py-2 text-grave-700 text-xs"
+          >
+            <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
+            No se pudieron cargar las tendencias de anotaciones.
+          </div>
+        ) : null}
 
-      {annotationTrendError ? (
-        <div
-          role="alert"
-          className="mt-4 flex items-center gap-2 rounded-lg border border-grave-200 bg-grave-50 px-3 py-2 text-grave-700 text-xs"
-        >
-          <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
-          No se pudieron cargar las tendencias de anotaciones.
-        </div>
-      ) : null}
-
-      <div className="relative overflow-hidden">
-        <table className="sr-only">
-          <caption>Tendencias mensuales de los últimos 6 meses</caption>
-          <thead>
-            <tr>
-              <th>Mes</th>
-              <th>Observado</th>
-              <th>Aperturas</th>
-              <th>Cierres</th>
-              <th>Brecha</th>
-              <th>Tasa de cierre</th>
-              <th>Alta gravedad</th>
-              <th>Anotaciones</th>
-              <th>Anotaciones positivas</th>
-              <th>Anotaciones negativas</th>
-              <th>Anotaciones de alta gravedad</th>
-              <th>Porcentaje negativas</th>
-              <th>Porcentaje positivas</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.points.map((point) => (
-              <tr key={point.key}>
-                <td>{point.label}</td>
-                <td>{point.isObserved ? "Sí" : "Pendiente"}</td>
-                <td>{point.opened}</td>
-                <td>{point.closed}</td>
-                <td>{point.netLoad}</td>
-                <td>{point.closureRate}%</td>
-                <td>{point.highSeverity}</td>
-                <td>{point.annotations}</td>
-                <td>{point.positiveAnnotations}</td>
-                <td>{point.negativeAnnotations}</td>
-                <td>{point.highSeverityAnnotations}</td>
-                <td>{point.negativeAnnotationShare}%</td>
-                <td>{point.positiveAnnotationShare}%</td>
+        <div className="relative overflow-hidden">
+          <table className="sr-only">
+            <caption>Tendencias mensuales de los últimos 6 meses</caption>
+            <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Observado</th>
+                <th>Aperturas</th>
+                <th>Cierres</th>
+                <th>Brecha</th>
+                <th>Tasa de cierre</th>
+                <th>Alta gravedad</th>
+                <th>Anotaciones</th>
+                <th>Anotaciones positivas</th>
+                <th>Anotaciones negativas</th>
+                <th>Anotaciones de alta gravedad</th>
+                <th>Porcentaje negativas</th>
+                <th>Porcentaje positivas</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {summary.points.map((point) => (
+                <tr key={point.key}>
+                  <td>{point.label}</td>
+                  <td>{point.isObserved ? "Sí" : "Pendiente"}</td>
+                  <td>{point.opened}</td>
+                  <td>{point.closed}</td>
+                  <td>{point.netLoad}</td>
+                  <td>{point.closureRate}%</td>
+                  <td>{point.highSeverity}</td>
+                  <td>{point.annotations}</td>
+                  <td>{point.positiveAnnotations}</td>
+                  <td>{point.negativeAnnotations}</td>
+                  <td>{point.highSeverityAnnotations}</td>
+                  <td>{point.negativeAnnotationShare}%</td>
+                  <td>{point.positiveAnnotationShare}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
   );

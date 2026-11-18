@@ -65,7 +65,7 @@ export default memo(function CausasTable({
 }: CausasTableProps) {
   return (
     <div className="overflow-hidden rounded-xl border border-neutral-200/60 bg-white shadow-sm">
-      <div className="divide-y divide-neutral-100 md:hidden">
+      <div className="divide-y divide-neutral-100 lg:hidden">
         {causas.map((causa) => (
           <button
             key={causa.id}
@@ -109,8 +109,8 @@ export default memo(function CausasTable({
         ))}
       </div>
 
-      <div className="hidden overflow-x-auto md:block">
-        <table className="min-w-full">
+      <div className="hidden overflow-x-auto lg:block">
+        <table className="min-w-full [&_th:first-child]:sticky [&_th:first-child]:left-0 [&_th:last-child]:sticky [&_th:last-child]:right-0 [&_th]:bg-neutral-50">
           <thead className="border-neutral-200/60 border-b bg-neutral-50">
             <tr>
               {[
@@ -148,7 +148,7 @@ export default memo(function CausasTable({
                 className="cursor-pointer transition-colors hover:bg-brand-50/50 focus:bg-brand-50 focus:outline-none"
                 aria-label={`Gestionar expediente ${causa.id}`}
               >
-                <td className="px-4 py-3 text-sm">
+                <td className="sticky left-0 bg-white px-4 py-3 text-sm">
                   <div className="flex min-w-48 flex-col">
                     <StudentName causa={causa} privacyMode={privacyMode} />
                   </div>
@@ -182,7 +182,7 @@ export default memo(function CausasTable({
                     {getCausaStatus(causa)}
                   </span>
                 </td>
-                <td className="whitespace-nowrap px-4 py-3 text-right text-sm">
+                <td className="sticky right-0 whitespace-nowrap bg-white px-4 py-3 text-right text-sm">
                   <button
                     type="button"
                     onClick={(event) => {

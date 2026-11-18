@@ -35,7 +35,11 @@ export default function DashboardPriorityFocus({
   studentAnnotationRankingError?: Error | null;
   privacyMode?: boolean;
 }) {
-  const [priorityOpen, setPriorityOpen] = useState(true);
+  const [priorityOpen, setPriorityOpen] = useState(
+    () =>
+      typeof window === "undefined" ||
+      window.matchMedia("(min-width: 640px)").matches,
+  );
 
   return (
     <section aria-labelledby="dashboard-priority-title">
@@ -44,7 +48,7 @@ export default function DashboardPriorityFocus({
         aria-expanded={priorityOpen}
         aria-controls="dashboard-priority-content"
         onClick={() => setPriorityOpen((open) => !open)}
-        className="flex min-h-8 w-full items-center justify-between gap-3 bg-transparent px-0 text-left transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+        className="flex min-h-11 w-full items-center justify-between gap-3 bg-transparent px-0 text-left transition-colors hover:text-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       >
         <span className="flex items-center gap-2">
           <BarChart3 className="size-4 text-brand-600" aria-hidden="true" />
@@ -73,7 +77,7 @@ export default function DashboardPriorityFocus({
       {priorityOpen ? (
         <div
           id="dashboard-priority-content"
-          className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
+          className="mt-3 grid grid-cols-1 gap-3 sm:mt-4 sm:gap-4 md:grid-cols-2 lg:grid-cols-3"
         >
           <CourseCartaRanking
             ranking={courseCartaRanking.slice(0, 6)}

@@ -28,7 +28,7 @@ export default function DashboardMeasuresPanel({
   return (
     <section
       aria-labelledby="measures-title"
-      className="card p-4 sm:p-5 lg:col-span-8"
+      className="card p-3 sm:p-5 lg:col-span-8"
     >
       <div className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
@@ -41,10 +41,10 @@ export default function DashboardMeasuresPanel({
           </h2>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-neutral-700 text-[11px] tabular-nums">
+          <span className="rounded-full bg-slate-100 px-2.5 py-1 font-bold text-neutral-700 text-xs tabular-nums">
             {totalStudents} alumnos · {pendingStudents} por gestionar
           </span>
-          <span className="inline-flex items-center gap-1 text-brand-600 text-[11px]">
+          <span className="inline-flex items-center gap-1 text-brand-600 text-xs">
             <Info className="size-3.5" aria-hidden="true" />
             Flujo de intervención gradual
           </span>
@@ -92,7 +92,7 @@ export default function DashboardMeasuresPanel({
           accentColor="#ef4444"
         />
       </div>
-      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-slate-100 border-t pt-3 text-neutral-600 text-[11px]">
+      <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-1.5 border-slate-100 border-t pt-3 text-neutral-600 text-xs">
         <span className="inline-flex items-center gap-1.5">
           <span className="size-2 rounded-full bg-gravisima-500" />
           <strong className="text-neutral-800">Pendientes:</strong> requieren

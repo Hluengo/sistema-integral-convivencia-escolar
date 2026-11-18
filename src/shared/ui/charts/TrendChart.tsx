@@ -49,7 +49,7 @@ export function MonthlyBars({
 
   return (
     <div
-      className={`grid ${dashboard ? "h-52 sm:h-64" : "h-52"} min-w-[30rem] items-end gap-1.5 sm:min-w-0 sm:gap-2`}
+      className={`grid ${dashboard ? "h-44 sm:h-64" : "h-52"} min-w-0 items-end gap-1.5 sm:gap-2`}
       style={{
         gridTemplateColumns: `repeat(${points.length}, minmax(0, 1fr))`,
       }}
@@ -63,7 +63,7 @@ export function MonthlyBars({
           }`}
         >
           <div
-            className={`flex ${dashboard ? "h-44" : "h-40"} items-end justify-center gap-1`}
+            className={`flex ${dashboard ? "h-36 sm:h-44" : "h-40"} items-end justify-center gap-1`}
           >
             {point.series.map((item) => {
               const height =

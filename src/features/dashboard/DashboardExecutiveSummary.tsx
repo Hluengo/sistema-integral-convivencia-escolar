@@ -56,12 +56,12 @@ export default function DashboardExecutiveSummary({
         iconColor="text-brand-600"
         accentColor="#006194"
         valueAside={
-          <span className="rounded-full bg-brand-50 px-2 py-1 font-bold text-[11px] text-brand-700">
+          <span className="rounded-full bg-brand-50 px-2 py-1 font-bold text-xs text-brand-700">
             +{newThisMonth} ingresados este mes
           </span>
         }
         footer={
-          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-xs">
             <span className="rounded-md bg-slate-50 px-2 py-1.5">
               <strong className="text-neutral-900">{closed}</strong> expedientes
               cerrados
@@ -83,7 +83,7 @@ export default function DashboardExecutiveSummary({
         accentColor="#64748b"
         onClick={onFaseSelect}
         footer={
-          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-xs">
             <span className="rounded-md bg-slate-50 px-2 py-1.5">
               <strong className="text-neutral-900">{investigatingCount}</strong>{" "}
               en etapa de investigación
@@ -99,7 +99,7 @@ export default function DashboardExecutiveSummary({
         label="Anotaciones en seguimiento"
         value={annotationTotal}
         valueAside={
-          <span className="font-medium text-neutral-600 text-[11px]">
+          <span className="font-medium text-neutral-600 text-xs">
             Estudiantes en seguimiento
           </span>
         }
@@ -109,7 +109,7 @@ export default function DashboardExecutiveSummary({
         iconColor="text-muygrave-600"
         accentColor="#4648d4"
         footer={
-          <div className="grid grid-cols-2 gap-2 text-center font-semibold text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-center font-semibold text-xs">
             <span className="rounded-md bg-gravisima-50 px-2 py-1.5 text-gravisima-700">
               {negativeAnnotations} negativas
             </span>
@@ -123,7 +123,7 @@ export default function DashboardExecutiveSummary({
         label="Plazos por etapa procesal"
         value={overdueDeadlines}
         valueAside={
-          <span className="rounded-full bg-leve-50 px-2 py-1 font-bold text-[11px] text-leve-700">
+          <span className="rounded-full bg-leve-50 px-2 py-1 font-bold text-xs text-leve-700">
             {overdueDeadlines > 0 ? "Vencidos" : "Sin vencidos"}
           </span>
         }
@@ -136,7 +136,7 @@ export default function DashboardExecutiveSummary({
         accentColor={overdueDeadlines > 0 ? "#ef4444" : "#16a34a"}
         isAlert={overdueDeadlines > 0}
         footer={
-          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-[11px]">
+          <div className="grid grid-cols-2 gap-2 text-neutral-600 text-xs">
             <span className="rounded-md bg-slate-50 px-2 py-1.5">
               <strong className="text-neutral-900">{dueWithin48Hours}</strong>{" "}
               vencen en 48 h

@@ -19,7 +19,10 @@ export default function DashboardStageOverview({
   counts: AnnotationStageCounts;
 }) {
   return (
-    <section aria-labelledby="annotation-dashboard-title" className="card p-5">
+    <section
+      aria-labelledby="annotation-dashboard-title"
+      className="card p-3 sm:p-5"
+    >
       <div className="flex items-center gap-2">
         <div className="rounded-lg bg-neutral-100 p-1.5">
           <BarChart3
@@ -34,7 +37,7 @@ export default function DashboardStageOverview({
           Estado de medidas y cartas disciplinarias
         </h2>
       </div>
-      <div className="mt-4 grid grid-cols-1 divide-y divide-neutral-200 border border-neutral-200 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
+      <div className="mt-3 grid grid-cols-1 divide-y divide-neutral-200 border border-neutral-200 sm:mt-4 sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
         <AnnotationStageCard
           label="Sin Carta"
           counts={counts.sinCarta}

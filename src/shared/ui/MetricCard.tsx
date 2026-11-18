@@ -59,7 +59,7 @@ export default memo(function MetricCard({
             {label}
           </span>
           {sublabel && (
-            <span className="mt-0.5 block font-medium text-slate-500 text-[11px]">
+            <span className="mt-0.5 block font-medium text-slate-500 text-xs">
               {sublabel}
             </span>
           )}
@@ -82,7 +82,7 @@ export default memo(function MetricCard({
         {valueAside ? <span className="min-w-0">{valueAside}</span> : null}
         {trend && (
           <span
-            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-11px ${
+            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 font-semibold text-xs ${
               trend.positive
                 ? "bg-leve-50 text-leve-700"
                 : "bg-gravisima-50 text-gravisima-700"

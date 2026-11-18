@@ -330,7 +330,7 @@ export default function DashboardStats({
   return (
     <section
       aria-label="Panel de control"
-      className="animate-fade-in space-y-6 pb-8"
+      className="animate-fade-in space-y-4 pb-6 sm:space-y-6 sm:pb-8"
     >
       {onboardingEnabled && tenantId && userId && onNavigate ? (
         <OnboardingChecklist

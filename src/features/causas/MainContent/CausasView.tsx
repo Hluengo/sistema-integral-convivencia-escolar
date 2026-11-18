@@ -132,7 +132,7 @@ export default function CausasView({
 
       <section
         aria-label="Filtros de expedientes"
-        className="card space-y-4 p-4"
+        className={`card sticky z-20 space-y-4 bg-white p-4 shadow-sm ${privacyMode ? "top-[93px]" : "top-[69px]"}`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">

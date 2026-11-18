@@ -82,6 +82,14 @@ export default memo(function Header({
           onViewAll={onViewAllNotifications}
         />
       </div>
+      {privacyMode && (
+        <p
+          role="status"
+          className="h-6 bg-brand-800 text-center text-xs font-semibold leading-6 text-white"
+        >
+          Modo privacidad activo
+        </p>
+      )}
     </header>
   );
 });

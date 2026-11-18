@@ -26,7 +26,7 @@ export default function DashboardActionQueue({
   return (
     <section
       aria-labelledby="dashboard-action-queue-title"
-      className="rounded-xl border border-gravisima-200/80 border-l-4 border-l-gravisima-500 bg-white p-4 shadow-sm sm:p-5"
+      className="rounded-xl border border-gravisima-200/80 border-l-4 border-l-gravisima-500 bg-white p-3 shadow-sm sm:p-5"
     >
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>

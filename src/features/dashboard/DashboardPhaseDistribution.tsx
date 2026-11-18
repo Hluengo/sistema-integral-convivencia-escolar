@@ -32,7 +32,7 @@ export default function DashboardPhaseDistribution({
   return (
     <section
       aria-labelledby="dashboard-phases-title"
-      className="card p-4 sm:p-5"
+      className="card p-3 sm:p-5"
     >
       <div className="flex flex-wrap items-start justify-between gap-4 border-b border-neutral-100 pb-4">
         <div>
@@ -103,8 +103,8 @@ export default function DashboardPhaseDistribution({
           ) : null;
         })}
       </div>
-      <div className="mt-5 overflow-x-auto">
-        <div className="grid min-w-[650px] grid-cols-5 gap-3">
+      <div className="mt-5">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-5">
           {PHASE_CARDS.map(
             ({ phase, description, tone, badge, badgeTone }, index) => {
               const count = visiblePhases.filter(
@@ -122,16 +122,16 @@ export default function DashboardPhaseDistribution({
                     onNavigate?.("causas");
                   }}
                   aria-label={`Ver expedientes en etapa ${phase}`}
-                  className="flex min-h-36 flex-col rounded-xl border border-neutral-200 bg-neutral-50/60 p-3 text-left transition-colors hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                  className="flex min-h-32 flex-col rounded-xl border border-neutral-200 bg-neutral-50/60 p-2.5 text-left transition-colors sm:min-h-36 sm:p-3 hover:border-brand-300 hover:bg-brand-50/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 >
                   <div className="flex items-center justify-between gap-2">
                     <span
-                      className={`rounded px-1.5 py-0.5 font-bold text-[11px] ${tone}`}
+                      className={`rounded px-1.5 py-0.5 font-bold text-xs ${tone}`}
                     >
                       ETAPA {index + 1}
                     </span>
                     <span
-                      className={`rounded-full px-2 py-0.5 text-[11px] ${badgeTone}`}
+                      className={`rounded-full px-2 py-0.5 text-xs ${badgeTone}`}
                     >
                       {badge}
                     </span>

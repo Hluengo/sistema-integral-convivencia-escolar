@@ -24,7 +24,7 @@ function SeverityCard({
 
   return (
     <div className="space-y-1.5">
-      <div className="flex items-center justify-between gap-3 text-[11px] font-semibold">
+      <div className="flex items-center justify-between gap-3 text-xs font-semibold">
         <span className="inline-flex items-center gap-2 text-neutral-700">
           <span className={`size-2 rounded-full ${dot}`} aria-hidden="true" />
           {tipo.toUpperCase()}
@@ -55,7 +55,7 @@ export default function DashboardSeverityPanel({
   return (
     <section
       aria-labelledby="severity-title"
-      className="card p-4 sm:p-5 lg:col-span-4"
+      className="card p-3 sm:p-5 lg:col-span-4"
     >
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
@@ -67,7 +67,7 @@ export default function DashboardSeverityPanel({
             Distribución por Gravedad
           </h2>
         </div>
-        <span className="rounded-full bg-indigo-100 px-3 py-1 font-bold text-[11px] text-indigo-700">
+        <span className="rounded-full bg-indigo-100 px-3 py-1 font-bold text-xs text-indigo-700">
           {total} Casos
         </span>
       </div>
@@ -75,7 +75,7 @@ export default function DashboardSeverityPanel({
         Clasificación tipificada según Reglamento Interno de Convivencia Escolar
         (RICE).
       </p>
-      <div className="mt-5 space-y-3.5">
+      <div className="mt-4 space-y-3 sm:mt-5 sm:space-y-3.5">
         <SeverityCard tipo="Leve" count={severity.Leve} total={total} />
         <SeverityCard tipo="Grave" count={severity.Grave} total={total} />
         <SeverityCard
@@ -94,7 +94,7 @@ export default function DashboardSeverityPanel({
           className="mt-0.5 size-4 shrink-0 text-blue-700"
           aria-hidden="true"
         />
-        <p className="text-blue-800 text-[11px] leading-tight">
+        <p className="text-blue-800 text-xs leading-tight">
           <strong>{highSeverityPercentage}%</strong> de los expedientes
           corresponden a faltas de alta ponderación formativa.
         </p>

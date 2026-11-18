@@ -2,7 +2,6 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
-import { visualizer } from "rollup-plugin-visualizer";
 
 /**
  * Plugin dev-only: permite el WebSocket de HMR de Vite (puerto 3002) y el
@@ -28,17 +27,6 @@ function devCspHmrPlugin(): Plugin {
 
 const plugins = [react(), tailwindcss(), devCspHmrPlugin()];
 const projectRoot = import.meta.dirname;
-
-if (process.env.ANALYZE === "true") {
-  plugins.push(
-    visualizer({
-      filename: "dist/stats.html",
-      open: true,
-      gzipSize: true,
-      brotliSize: true,
-    }) as never,
-  );
-}
 
 export default defineConfig(() => {
   return {

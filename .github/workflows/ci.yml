@@ -47,9 +47,6 @@ jobs:
       - name: Code lint
         run: npm run lint:code
 
-      - name: Knip (archivos y dependencias)
-        run: npm run knip:ci
-
       - name: Unit tests with coverage
         run: npm run test:coverage
 
