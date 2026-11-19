@@ -139,9 +139,11 @@ export function reconcileChecklistFromBitacora(
 
     const metadata = parseRegistrationDescription(entry.descripcion);
     const entryDate = new Date(entry.fecha);
-    const fechaCompletado = Number.isNaN(entryDate.getTime())
-      ? items[index].fechaCompletado
-      : toDateOnly(entryDate);
+    // Una rectificación corrige el texto, no mueve la fecha en que ocurrió el
+    // hito; sin esto, editar hoy un hito del 17 lo mostraría fechado hoy.
+    const fechaCompletado =
+      items[index].fechaCompletado ??
+      (Number.isNaN(entryDate.getTime()) ? undefined : toDateOnly(entryDate));
 
     items[index] = {
       ...items[index],

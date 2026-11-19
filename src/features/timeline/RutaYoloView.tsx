@@ -10,6 +10,7 @@ import type {
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
 import { getPhaseTone } from "../../shared/lib/domain/phaseTones";
+import { getDocumentPreviewKind } from "./documentPreviewText";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
 import RegistrationForm from "./RegistrationForm";
 import RutaYoloPhaseRail from "./RutaYoloPhaseRail";
@@ -52,8 +53,10 @@ export default function RutaYoloView({
   const [expandedPhase, setExpandedPhase] = useState<FaseProcedimental | null>(
     null,
   );
-  const [isLoadingPdf, setIsLoadingPdf] = useState(false);
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [isLoadingDocument, setIsLoadingDocument] = useState(false);
+  const [documentPreviewUrl, setDocumentPreviewUrl] = useState<string | null>(
+    null,
+  );
   const [isDocumentExpanded, setIsDocumentExpanded] = useState(false);
   const evidenceDraftKey = useSessionDraftKey("additional-evidence", causa.id);
   const [evidenceSelection, setEvidenceSelection] = useState<{
@@ -129,18 +132,17 @@ export default function RutaYoloView({
   useEffect(() => {
     let cancelled = false;
     setIsDocumentExpanded(false);
-    setPdfUrl(null);
-    if (
-      !selectedItem?.documentoUrl ||
-      !/\.pdf(?:$|[?#])/i.test(selectedItem.documentoUrl)
-    ) {
+    setDocumentPreviewUrl(null);
+    setIsLoadingDocument(false);
+    const path = selectedItem?.documentoUrl;
+    if (!path || getDocumentPreviewKind(path) === "none") {
       return;
     }
-    setIsLoadingPdf(true);
-    void getDocumentUrl(selectedItem.documentoUrl).then((url) => {
+    setIsLoadingDocument(true);
+    void getDocumentUrl(path).then((url) => {
       if (!cancelled) {
-        setPdfUrl(url);
-        setIsLoadingPdf(false);
+        setDocumentPreviewUrl(url);
+        setIsLoadingDocument(false);
       }
     });
     return () => {
@@ -193,7 +195,7 @@ export default function RutaYoloView({
                 aria-current={active ? "step" : undefined}
               >
                 <span
-                  className={`flex size-4 items-center justify-center rounded-full text-[9px] ${active ? "bg-white/20" : "bg-neutral-100"}`}
+                  className={`flex size-4 items-center justify-center rounded-full text-11px leading-none ${active ? "bg-white/20" : "bg-neutral-100"}`}
                 >
                   {index + 1}
                 </span>
@@ -324,23 +326,23 @@ export default function RutaYoloView({
                       </div>
                     </div>
 
-                    {isLoadingPdf && (
+                    {isLoadingDocument && (
                       <div className="flex min-h-[28rem] items-center justify-center text-neutral-500 text-sm">
                         Cargando documento seguro…
                       </div>
                     )}
-                    {!isLoadingPdf && pdfUrl && (
+                    {!isLoadingDocument && selectedItem.documentoUrl && (
                       <RutaYoloDocumentPreview
                         item={selectedItem}
-                        pdfUrl={pdfUrl}
+                        signedUrl={documentPreviewUrl ?? ""}
                         expanded={isDocumentExpanded}
                         onToggleExpanded={() =>
                           setIsDocumentExpanded((expanded) => !expanded)
                         }
                       />
                     )}
-                    {!isLoadingPdf &&
-                      !pdfUrl &&
+                    {!isLoadingDocument &&
+                      !selectedItem.documentoUrl &&
                       evidenceEntries.length === 0 && (
                         <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-dashed border-neutral-300 bg-neutral-50 text-center">
                           <Upload
@@ -348,7 +350,7 @@ export default function RutaYoloView({
                             aria-hidden="true"
                           />
                           <p className="mt-2 font-semibold text-neutral-700 text-sm">
-                            Este hito no tiene un PDF adjunto.
+                            Este hito no tiene un documento adjunto.
                           </p>
                           <p className="mt-1 text-neutral-500 text-xs">
                             Puedes editar el hito para adjuntar el documento.
@@ -487,9 +489,15 @@ export default function RutaYoloView({
                 !isNotification &&
                 !selectedItem.completado &&
                 currentRole === "docente" && (
-                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-neutral-600 text-sm">
-                    El registro de este hito lo realiza el equipo de convivencia
-                    o inspectoría.
+                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                    <p className="font-semibold text-neutral-800 text-sm">
+                      Expediente en solo lectura.
+                    </p>
+                    <p className="mt-1 text-neutral-600 text-xs">
+                      El registro de este hito lo realiza el equipo de
+                      convivencia, inspectoría o dirección. Esta sesión no tiene
+                      ese permiso sobre el expediente.
+                    </p>
                   </div>
                 )}
             </div>

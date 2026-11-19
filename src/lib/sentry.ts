@@ -10,8 +10,9 @@ export function initSentry() {
     Sentry.init({
       dsn: SENTRY_DSN,
       environment: ENVIRONMENT,
-      integrations: [Sentry.browserTracingIntegration()],
-      tracesSampleRate: ENVIRONMENT === "production" ? 0.1 : 1.0,
+      // Sin tracing: este proyecto solo necesita captura de errores. La
+      // integración de rendimiento duplicaba el chunk de Sentry.
+      tracesSampleRate: 0,
       beforeSend(event) {
         // No enviar errores de desarrollo localhost a Sentry
         if (
@@ -64,5 +65,3 @@ export function addBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
     Sentry.addBreadcrumb(breadcrumb);
   }
 }
-
-export const SentryReact = Sentry;

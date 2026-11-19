@@ -137,6 +137,30 @@ describe("reconcileChecklistFromBitacora", () => {
     assert.equal(item?.observaciones, "Resolución notificada correctamente.");
   });
 
+  it("una rectificación corrige el texto sin mover la fecha del hito", () => {
+    const result = reconcileChecklistFromBitacora(
+      [],
+      [
+        entry(
+          "b1",
+          "2026-11-17T12:00:00.000Z",
+          "Registro de Hito: Informe Concluyente Emitido",
+          "Registro. Responsable: Héctor Luengo. Observaciones: Sin observaciones.",
+        ),
+        entry(
+          "b2",
+          "2026-11-19T12:00:00.000Z",
+          "Rectificación de Hito: Informe Concluyente Emitido",
+          "Se rectificó el registro del hito. Responsable: Héctor Luengo. Observaciones actualizadas: Se deja constancia del envío.",
+        ),
+      ],
+    );
+    const item = result.find((candidate) => candidate.id === "chk_res_6");
+
+    assert.equal(item?.observaciones, "Se deja constancia del envío.");
+    assert.equal(item?.fechaCompletado, "2026-11-17");
+  });
+
   it("mantiene todos los hitos base aunque Supabase tenga solo una parte", () => {
     const result = reconcileChecklistFromBitacora(
       [

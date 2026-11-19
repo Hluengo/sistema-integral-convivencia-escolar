@@ -45,6 +45,10 @@ export default defineConfig(() => {
           manualChunks(id) {
             if (!id.includes("node_modules")) return;
             if (id.includes("/write-excel-file/")) return "excel";
+            // Solo lo pide el visor de Word, que es un chunk diferido.
+            if (id.includes("/docx-preview/") || id.includes("/jszip/")) {
+              return "docx-viewer";
+            }
             if (id.includes("/posthog-js/")) return "telemetry-posthog";
             if (id.includes("/@sentry/")) return "telemetry-sentry";
             if (id.includes("/web-vitals/")) return "telemetry-vitals";
@@ -59,7 +63,10 @@ export default defineConfig(() => {
             if (id.includes("/@radix-ui/")) return "radix";
             if (id.includes("/@tanstack/")) return "tanstack";
             if (id.includes("/date-fns/")) return "date";
-            if (id.includes("/pdfjs-dist/")) return "pdf-viewer";
+            // pdfjs-dist queda sin chunk propio: si se nombra, entra al grafo
+            // estático y se precarga (461 KB) aunque solo lo abre el visor de
+            // PDFs; sin nombre sigue al import() diferido que lo pide.
+            if (id.includes("/pdfjs-dist/")) return undefined;
             return "vendor";
           },
         },

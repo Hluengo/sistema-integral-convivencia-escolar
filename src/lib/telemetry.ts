@@ -8,23 +8,34 @@ type TelemetryModules = {
   sentry: typeof SentryModule;
 };
 
-/** Stub no-op de Sentry para desarrollo: evita descargar el chunk de ~530 KB. */
+/** Stub no-op de Sentry para desarrollo: evita descargar su chunk. */
 const NOOP_SENTRY: typeof SentryModule = {
   initSentry: () => {},
   captureException: () => {},
   captureMessage: () => {},
   setUserContext: () => {},
   addBreadcrumb: () => {},
-  SentryReact: undefined as never,
+};
+
+/** Stub no-op de PostHog cuando el proyecto no tiene analytics configurado. */
+const NOOP_POSTHOG: typeof PostHogModule = {
+  initPostHog: () => {},
+  captureEvent: () => {},
+  identifyUser: () => {},
+  resetUser: () => {},
+  setUserProperties: () => {},
 };
 
 let telemetryPromise: Promise<TelemetryModules> | null = null;
 
 export function loadTelemetry(): Promise<TelemetryModules> {
   telemetryPromise ??= Promise.all([
-    import("./posthog"),
-    // Solo producción descarga el chunk de Sentry (browserTracing ~530 KB).
-    import.meta.env.MODE === "production"
+    // Sin clave y host no hay nada que enviar: no se descarga el chunk (~215 KB).
+    import.meta.env.VITE_POSTHOG_KEY && import.meta.env.VITE_POSTHOG_HOST
+      ? import("./posthog")
+      : Promise.resolve(NOOP_POSTHOG),
+    // Sentry solo en producción y con DSN: sin los dos, el chunk sobra.
+    import.meta.env.MODE === "production" && import.meta.env.VITE_SENTRY_DSN
       ? import("./sentry")
       : Promise.resolve(NOOP_SENTRY),
   ]).then(([posthog, sentry]) => {
