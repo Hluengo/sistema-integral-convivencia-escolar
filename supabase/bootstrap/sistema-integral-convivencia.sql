@@ -8,7 +8,8 @@
 -- como postgres. No ejecutar en el proyecto actual, en producción, ni sobre una base con tablas de la app.
 -- El bloque inicial aborta si detecta tablas centrales existentes. El script no es idempotente.
 --
--- El SQL crea esquema, funciones, políticas RLS, índices, triggers y configuración de Storage.
+-- El SQL crea esquema, funciones, políticas RLS, índices, triggers, configuración de Storage y
+-- registra los códigos de aplicación convivencia/inasistencias requeridos por has_app_access().
 -- No crea tenants, usuarios Auth ni datos institucionales. Esos datos deben provisionarse después
 -- mediante el flujo de alta de la aplicación. No usar supabase/seed.sql en producción.
 --
@@ -11806,5 +11807,14 @@ alter table public.causas
 comment on column public.causas.fecha_limite_apelacion is
   'Plazo máximo de 48 horas para presentar reconsideración o apelación desde la resolución concluyente.';
 -- ===== SOURCE END: supabase/migrations/20261120120000_add_appeal_deadline.sql =====
+
+-- Catálogo funcional requerido por has_app_access() y app_memberships.
+INSERT INTO public.applications (code, name, is_active)
+VALUES
+  ('convivencia', 'Convivencia Escolar', true),
+  ('inasistencias', 'Gestion de Inasistencias', true)
+ON CONFLICT (code) DO UPDATE SET
+  name = EXCLUDED.name,
+  is_active = EXCLUDED.is_active;
 
 COMMIT;
