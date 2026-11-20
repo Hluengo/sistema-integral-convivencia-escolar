@@ -47,9 +47,7 @@ supabase_schema_actual_remoto.sql
 # Capturas oficiales del README (anonimizadas con modo privacidad)
 !docs/screenshots/
 !docs/screenshots/*.png
-
-.vercel
-.env*
+!docs/screenshots/*.jpg
 
 Free-Models-IA/
 tsconfig.tsbuildinfo
