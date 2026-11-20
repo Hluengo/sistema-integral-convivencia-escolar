@@ -41,6 +41,14 @@ function isAppealComplete(causa: Causa): boolean {
   );
 }
 
+function isResolutionComplete(causa: Causa): boolean {
+  const resolutionProgress = getPhaseProgress(causa, "Resolución");
+  return (
+    resolutionProgress.total > 0 &&
+    resolutionProgress.completed === resolutionProgress.total
+  );
+}
+
 interface PhaseProgress {
   phase: FaseProcedimental;
   completed: number;
@@ -120,6 +128,9 @@ export function getCausaOperationalPhase(causa: Causa): FaseProcedimental {
     CAUSA_PHASES.indexOf(computed) < CAUSA_PHASES.indexOf("Resolución")
   ) {
     return "Resolución";
+  }
+  if (computed === "Resolución" && isResolutionComplete(causa)) {
+    return "Apelación";
   }
   if (computed === "Apelación" && isAppealComplete(causa)) {
     return "Seguimiento";

@@ -196,6 +196,24 @@ describe("Resumen operativo de causa", () => {
     assert.equal(summary.nextChecklistPhase, "Seguimiento");
   });
 
+  it("pasa a Apelación cuando los hitos visibles de Resolución están completos", () => {
+    const checklist = getBaseChecklist(2).map((item) =>
+      ["chk_res_2", "chk_res_6"].includes(item.id)
+        ? { ...item, completado: true }
+        : item,
+    );
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
+        checklistDebidoProceso: checklist,
+      }),
+    );
+
+    assert.equal(summary.currentPhase, "Apelación");
+    assert.equal(summary.nextChecklistItem?.id, "chk_imp_2");
+    assert.equal(summary.nextChecklistPhase, "Apelación");
+  });
+
   it("pasa a Seguimiento cuando vence el plazo sin recurso", () => {
     const checklist = getBaseChecklist(2).map((item) =>
       ["chk_imp_6", "chk_imp_7"].includes(item.id)
