@@ -41,12 +41,15 @@ function isAppealComplete(causa: Causa): boolean {
   );
 }
 
-function isResolutionComplete(causa: Causa): boolean {
-  const resolutionProgress = getPhaseProgress(causa, "Resolución");
-  return (
-    resolutionProgress.total > 0 &&
-    resolutionProgress.completed === resolutionProgress.total
-  );
+function isPhaseCompleteForAdvance(
+  causa: Causa,
+  phase: FaseProcedimental,
+): boolean {
+  if (phase === "Apelación") return isAppealComplete(causa);
+  if (phase === "Seguimiento") return false;
+
+  const items = getApplicableChecklistItems(causa, phase);
+  return items.length > 0 && items.every((item) => item.completado);
 }
 
 interface PhaseProgress {
@@ -109,9 +112,7 @@ export function getCausaOperationalPhase(causa: Causa): FaseProcedimental {
     const progress = getPhaseProgress(causa, phase);
     return progress.completed > 0 ? index : latest;
   }, -1);
-  const computed =
-    CAUSA_PHASES[Math.max(persistedIndex, latestActivityIndex)] ??
-    persistedPhase;
+  let phaseIndex = Math.max(persistedIndex, latestActivityIndex);
   // ponytail: informe de cierre subido (chk_res_2 con evidencia) ya es Resolución aunque el estado aún diga Recepción
   const closeItem = causa.checklistDebidoProceso.find(
     (item) => item.id === "chk_res_2",
@@ -123,19 +124,18 @@ export function getCausaOperationalPhase(causa: Causa): FaseProcedimental {
       closeItem.documentoNombre ||
       closeItem.documentoUrl),
   );
-  if (
-    hasClosureEvidence &&
-    CAUSA_PHASES.indexOf(computed) < CAUSA_PHASES.indexOf("Resolución")
+  if (hasClosureEvidence && phaseIndex < CAUSA_PHASES.indexOf("Resolución")) {
+    phaseIndex = CAUSA_PHASES.indexOf("Resolución");
+  }
+
+  while (
+    phaseIndex < CAUSA_PHASES.length - 1 &&
+    isPhaseCompleteForAdvance(causa, CAUSA_PHASES[phaseIndex])
   ) {
-    return "Resolución";
+    phaseIndex += 1;
   }
-  if (computed === "Resolución" && isResolutionComplete(causa)) {
-    return "Apelación";
-  }
-  if (computed === "Apelación" && isAppealComplete(causa)) {
-    return "Seguimiento";
-  }
-  return computed;
+
+  return CAUSA_PHASES[phaseIndex] ?? persistedPhase;
 }
 
 export function getCausaOperationalSummary(

@@ -178,6 +178,20 @@ describe("Resumen operativo de causa", () => {
     assert.equal(summary.nextChecklistPhase, "Resolución");
   });
 
+  it("avanza desde Recepción cuando sus hitos aplicables están completos", () => {
+    const checklist = getBaseChecklist(2).map((item) =>
+      item.id.startsWith("chk_rec_") ? { ...item, completado: true } : item,
+    );
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.DENUNCIA_RECEPCIONADA,
+        checklistDebidoProceso: checklist,
+      }),
+    );
+
+    assert.equal(summary.currentPhase, "Investigación");
+  });
+
   it("pasa a Seguimiento cuando los hitos visibles de Apelación están completos", () => {
     const checklist = getBaseChecklist(2).map((item) =>
       ["chk_imp_2", "chk_imp_4", "chk_imp_7"].includes(item.id)
