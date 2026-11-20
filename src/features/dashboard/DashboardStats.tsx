@@ -377,6 +377,7 @@ export default function DashboardStats({
       {isAuthenticated ? (
         <DashboardPhaseDistribution
           activePhases={activePhases}
+          closedCount={closed}
           visiblePhases={visiblePhases}
           onTimeCount={onTimeCount}
           toResolveCount={toResolveCount}
