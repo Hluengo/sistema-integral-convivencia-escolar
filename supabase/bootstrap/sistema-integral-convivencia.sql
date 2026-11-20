@@ -5,8 +5,11 @@
 -- coexistence_cases, que no tiene consumidor en el código de la app y se conserva solo en el
 -- baseline del entorno actual por motivos históricos.
 --
--- USO: ejecutar el archivo completo una sola vez en SQL Editor de un proyecto Supabase recién creado,
--- como postgres. No ejecutar en el proyecto actual, en producción, ni sobre una base con tablas de la app.
+-- USO: en un CLON NUEVO, coloca este archivo como única migración inicial en supabase/migrations/
+-- y ejecuta supabase db push con el proyecto Supabase nuevo enlazado. Mueve fuera de esa carpeta
+-- las 93 migraciones de origen, ya incluidas aquí. El CLI registrará esta migración consolidada.
+-- No ejecutar en el proyecto actual, en producción, ni sobre una base con tablas de la app.
+-- No aplicarlo desde SQL Editor: no registra el historial CLI y puede expirar en scripts largos.
 -- El bloque inicial aborta si detecta tablas centrales existentes. El script no es idempotente.
 --
 -- El SQL crea esquema, funciones, políticas RLS, índices, triggers, configuración de Storage y
