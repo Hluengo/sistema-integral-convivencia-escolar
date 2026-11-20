@@ -48,9 +48,6 @@ supabase_schema_actual_remoto.sql
 !docs/screenshots/
 !docs/screenshots/*.png
 
-.vercel
-.env*
-
 Free-Models-IA/
 tsconfig.tsbuildinfo
 *.tsbuildinfo
