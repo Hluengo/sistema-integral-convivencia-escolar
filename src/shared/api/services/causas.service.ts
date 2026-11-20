@@ -35,6 +35,7 @@ interface SupabaseCausaRow {
   plazo_investigacion_dias: number | null;
   fecha_limite_investigacion: string | null;
   fecha_limite_cierre: string | null;
+  fecha_limite_apelacion: string | null;
 }
 
 interface SupabaseChecklistRow {
@@ -167,6 +168,7 @@ function mapCausaRows(rows: SupabaseCausaRow[]): Causa[] {
       plazoInvestigacionDias: row.plazo_investigacion_dias || undefined,
       fechaLimiteInvestigacion: row.fecha_limite_investigacion || undefined,
       fechaLimiteCierre: row.fecha_limite_cierre || undefined,
+      fechaLimiteApelacion: row.fecha_limite_apelacion || undefined,
       bitacora: [],
       checklistDebidoProceso: [],
     });
@@ -186,7 +188,7 @@ export async function fetchCausasPage(
   let query = supabase
     .from("causas")
     .select(
-      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
+      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,fecha_limite_apelacion,apoderado_email",
     )
     .order("fecha_ultima_actualizacion", { ascending: false });
   // Defensa en profundidad: RLS ya filtra por tenant, pero el cliente
@@ -385,7 +387,7 @@ export async function fetchCausaDetails(
   let causaQuery = supabase
     .from("causas")
     .select(
-      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,apoderado_email",
+      "id,student_id,incidente_id,procedural_model_version,estudiante_nombre,estudiante_curso,nna_protected_name,run_estudiante,fecha_apertura,estado_actual,tipo_infraccion,responsable,compromete_aula_segura,fecha_ultima_actualizacion,observaciones,conducta_rice_id,medidas_ejecutadas,plazo_24h,fecha_limite_24h,fecha_inicio_investigacion,plazo_investigacion_dias,fecha_limite_investigacion,fecha_limite_cierre,fecha_limite_apelacion,apoderado_email",
     )
     .eq("id", causaId);
   if (tenantId) causaQuery = causaQuery.eq("tenant_id", tenantId);
@@ -564,6 +566,7 @@ export async function createCausa(
     plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
     fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
     fecha_limite_cierre: causa.fechaLimiteCierre || null,
+    fecha_limite_apelacion: causa.fechaLimiteApelacion || null,
   };
   let causaId = await resolveUniqueCausaId(causa.id);
   let usedGlobalId = false;
@@ -619,6 +622,7 @@ function causaUpdateRow(causa: Causa) {
     plazo_investigacion_dias: causa.plazoInvestigacionDias || null,
     fecha_limite_investigacion: causa.fechaLimiteInvestigacion || null,
     fecha_limite_cierre: causa.fechaLimiteCierre || null,
+    fecha_limite_apelacion: causa.fechaLimiteApelacion || null,
   };
 }
 

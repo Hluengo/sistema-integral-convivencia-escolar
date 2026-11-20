@@ -24,6 +24,12 @@ export interface ProceduralContext {
   seguimientos?: SeguimientoRecord[];
 }
 
+export function getAppealDeadline(startDate: string): string {
+  return new Date(
+    new Date(startDate).getTime() + 48 * 60 * 60 * 1000,
+  ).toISOString();
+}
+
 const done = (causa: Causa, id: string) =>
   causa.checklistDebidoProceso.some(
     (item) => item.id === id && item.completado,

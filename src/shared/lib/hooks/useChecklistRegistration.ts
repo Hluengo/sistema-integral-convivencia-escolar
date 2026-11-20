@@ -21,6 +21,8 @@ import {
   uploadDocument,
 } from "../../api/services/storage.service";
 import { CIERRE_COMUNICACION_OBSERVACIONES } from "../data";
+import { EstadoCausa } from "../types";
+import { getAppealDeadline } from "../domain/proceduralTransitions";
 
 const checklistRegistrationDraftSchema = z
   .object({
@@ -263,6 +265,11 @@ export function useChecklistRegistration({
             documentoUrl,
           };
         });
+        const isConclusiveResolution =
+          itemId === "chk_res_6" && Boolean(evidenceFile);
+        const appealDeadline = isConclusiveResolution
+          ? getAppealDeadline(`${regActionDate || nowDateOnly()}T12:00:00.000Z`)
+          : causa.fechaLimiteApelacion;
 
         const draftSnapshot = JSON.stringify({
           regName,
@@ -283,6 +290,12 @@ export function useChecklistRegistration({
 
         onUpdateCausa({
           ...causa,
+          ...(isConclusiveResolution
+            ? {
+                estadoActual: EstadoCausa.EN_PLAZO_APELACION,
+                fechaLimiteApelacion: appealDeadline,
+              }
+            : {}),
           checklistDebidoProceso: updatedChecklist,
           bitacora: [newLog, ...causa.bitacora],
           fechaUltimaActualizacion: nowDateOnly(),

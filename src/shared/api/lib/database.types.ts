@@ -532,6 +532,7 @@ export type Database = {
           fecha_inicio_investigacion: string | null;
           fecha_limite_24h: string | null;
           fecha_limite_cierre: string | null;
+          fecha_limite_apelacion: string | null;
           fecha_limite_investigacion: string | null;
           plazo_24h: boolean;
           plazo_investigacion_dias: number | null;
@@ -563,6 +564,7 @@ export type Database = {
           fecha_inicio_investigacion?: string | null;
           fecha_limite_24h?: string | null;
           fecha_limite_cierre?: string | null;
+          fecha_limite_apelacion?: string | null;
           fecha_limite_investigacion?: string | null;
           plazo_24h?: boolean;
           plazo_investigacion_dias?: number | null;
@@ -594,6 +596,7 @@ export type Database = {
           fecha_inicio_investigacion?: string | null;
           fecha_limite_24h?: string | null;
           fecha_limite_cierre?: string | null;
+          fecha_limite_apelacion?: string | null;
           fecha_limite_investigacion?: string | null;
           plazo_24h?: boolean;
           plazo_investigacion_dias?: number | null;

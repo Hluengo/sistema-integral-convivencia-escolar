@@ -10,10 +10,18 @@ import type {
 } from "../../api/services/hechos.service";
 import {
   canCloseCase,
+  getAppealDeadline,
   canCloseInvestigation,
   canNotifyDecision,
   getNextRequiredAction,
 } from "./proceduralTransitions";
+
+test("calcula el plazo de apelación a 48 horas", () => {
+  assert.equal(
+    getAppealDeadline("2026-11-20T12:00:00.000Z"),
+    "2026-11-22T12:00:00.000Z",
+  );
+});
 
 const causa = (): Causa => ({
   id: "DC-2026-001",

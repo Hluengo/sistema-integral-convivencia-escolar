@@ -152,6 +152,7 @@ export interface Causa {
   plazo24h?: boolean;
   fechaLimite24h?: string;
   fechaLimiteCierre?: string;
+  fechaLimiteApelacion?: string;
 
   // Suspensión (máximo 15 días hábiles)
   fechaInicioSuspension?: string;
