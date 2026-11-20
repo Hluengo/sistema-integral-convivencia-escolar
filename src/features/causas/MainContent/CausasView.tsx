@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import EmptyState from "../../../shared/EmptyState";
 import ViewLoader from "../../../shared/ui/ViewLoader";
-import type { Causa } from "../../../shared/lib/types";
+import { type Causa, EstadoCausa } from "../../../shared/lib/types";
 import { useCausasStore } from "../../../shared/lib/stores/causasStore";
 import { useUIStore } from "../../../shared/lib/stores/uiStore";
 import Button from "@/shared/ui/Button";
@@ -79,6 +79,14 @@ export default function CausasView({
   const visibleAulaSeguraCount = visibleCausas.filter(
     (causa) => causa.comprometeAulaSegura,
   ).length;
+  const showClosedCases = selectedFaseFilter === "Cerrados";
+  const closedCausasCount = useMemo(
+    () =>
+      workspace.causas.filter(
+        (causa) => causa.estadoActual === EstadoCausa.CAUSA_CERRADA,
+      ).length,
+    [workspace.causas],
+  );
   const hasActiveFilters = Boolean(
     selectedCourse || searchQuery || selectedFaseFilter !== "Todas",
   );
@@ -98,8 +106,12 @@ export default function CausasView({
     <div className="animate-fade-in space-y-6">
       <PageHeader
         eyebrow="Expedientes"
-        title="Expedientes activos"
-        description={`${visibleCausas.length} registro${visibleCausas.length !== 1 ? "s" : ""} activo${visibleCausas.length !== 1 ? "s" : ""}`}
+        title={showClosedCases ? "Expedientes cerrados" : "Expedientes activos"}
+        description={
+          showClosedCases
+            ? `${closedCausasCount} registro${closedCausasCount !== 1 ? "s" : ""} cerrado${closedCausasCount !== 1 ? "s" : ""}`
+            : `${visibleCausas.length} registro${visibleCausas.length !== 1 ? "s" : ""} activo${visibleCausas.length !== 1 ? "s" : ""}`
+        }
         metric={
           visibleAulaSeguraCount > 0 ? (
             <span className="inline-flex items-center gap-1 rounded-md bg-gravisima-50 px-2.5 py-1 font-semibold text-gravisima-700 text-xs">
@@ -134,50 +146,52 @@ export default function CausasView({
         aria-label="Filtros de expedientes"
         className={`card sticky z-20 space-y-4 bg-white p-4 shadow-sm ${privacyMode ? "top-[93px]" : "top-[69px]"}`}
       >
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
-              aria-hidden="true"
-            />
-            <input
-              type="search"
-              id="search-active-causes"
-              placeholder="Buscar estudiante, RUT o curso..."
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              aria-label="Buscar expedientes"
-              className="min-h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-500 hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            />
+        {!showClosedCases && (
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
+              />
+              <input
+                type="search"
+                id="search-active-causes"
+                placeholder="Buscar estudiante, RUT o curso..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                aria-label="Buscar expedientes"
+                className="min-h-11 w-full rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-4 pl-10 font-medium text-neutral-800 text-sm transition-colors placeholder:text-neutral-500 hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              />
+            </div>
+            <div className="relative sm:w-72">
+              <GraduationCap
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
+              />
+              <select
+                id="active-causes-course-filter"
+                value={selectedCourse}
+                onChange={(event) => {
+                  setSelectedCourse(event.target.value);
+                  clearSelectedCausa();
+                }}
+                aria-label="Filtrar expedientes por curso"
+                className="min-h-11 w-full appearance-none rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+              >
+                <option value="">Todos los cursos</option>
+                {courseOptions.map((course) => (
+                  <option key={course} value={course}>
+                    {course}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown
+                className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
+                aria-hidden="true"
+              />
+            </div>
           </div>
-          <div className="relative sm:w-72">
-            <GraduationCap
-              className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-neutral-400"
-              aria-hidden="true"
-            />
-            <select
-              id="active-causes-course-filter"
-              value={selectedCourse}
-              onChange={(event) => {
-                setSelectedCourse(event.target.value);
-                clearSelectedCausa();
-              }}
-              aria-label="Filtrar expedientes por curso"
-              className="min-h-11 w-full appearance-none rounded-lg border border-neutral-200 bg-neutral-50 py-2 pr-9 pl-10 font-medium text-neutral-800 text-sm transition-colors hover:border-neutral-300 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-            >
-              <option value="">Todos los cursos</option>
-              {courseOptions.map((course) => (
-                <option key={course} value={course}>
-                  {course}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              className="pointer-events-none absolute top-1/2 right-3 size-4 -translate-y-1/2 text-neutral-400"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
+        )}
 
         <div
           className="inline-flex flex-wrap gap-1 rounded-xl bg-neutral-100 p-1"
@@ -192,6 +206,7 @@ export default function CausasView({
               "Resolución",
               "Apelación",
               "Seguimiento",
+              "Cerrados",
             ] as const
           ).map((fase) => (
             <button
@@ -215,7 +230,16 @@ export default function CausasView({
       </section>
 
       {/* Table follows the same hierarchy as Anotaciones. */}
-      {workspace.isCausasLoading ? (
+      {showClosedCases ? (
+        <Suspense fallback={<ViewLoader view="causas" compact />}>
+          <ClosedCases
+            causas={workspace.causas}
+            privacyMode={privacyMode}
+            onReopenCausa={navigation.onReopenCausa}
+            onSelectCausa={handleSelectCausa}
+          />
+        </Suspense>
+      ) : workspace.isCausasLoading ? (
         <ViewLoader view="causas" compact />
       ) : visibleCausas.length > 0 ? (
         <div className="space-y-3">
@@ -286,25 +310,6 @@ export default function CausasView({
           )}
         </div>
       )}
-
-      {/* VIEW 3: CLOSED CASES */}
-      {!workspace.isCausasLoading &&
-        workspace.selectedCausaId === "" &&
-        visibleCausas.length === 0 &&
-        !hasActiveFilters && (
-          <div className="flex-1">
-            <Suspense fallback={<ViewLoader view="causas" compact />}>
-              <ClosedCases
-                causas={workspace.causas}
-                privacyMode={privacyMode}
-                onReopenCausa={navigation.onReopenCausa}
-                onSelectCausa={(causa) => {
-                  navigation.onSelectCausaFromDashboard(causa.id);
-                }}
-              />
-            </Suspense>
-          </div>
-        )}
     </div>
   );
 }

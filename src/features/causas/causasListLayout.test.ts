@@ -64,6 +64,9 @@ describe("Listado de causas activas", () => {
     assert.ok(coursePosition > searchPosition);
     assert.ok(phasePosition > coursePosition);
     assert.ok(tablePosition > phasePosition);
+    // Los cerrados dejan de desaparecer: pestaña propia después de Seguimiento.
+    assert.match(view, /"Seguimiento",\s*"Cerrados",/);
+    assert.match(view, /<ClosedCases/);
   });
 
   it("incluye las columnas esenciales, privacidad y acción de gestión", () => {

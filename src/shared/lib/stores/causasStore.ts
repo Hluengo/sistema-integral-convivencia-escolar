@@ -17,6 +17,9 @@ import { invalidateDashboardQueries } from "../hooks/useInvalidateDashboardQueri
 
 export type SaveStatus = "idle" | "saving" | "saved" | "error";
 
+/** Filtro del listado: fases del debido proceso o la vista de cerrados. */
+export type CausaFaseFilter = FaseProcedimental | "Todas" | "Cerrados";
+
 /** Reapertura: dato legal, siempre deja rastro en la bitácora del expediente. */
 function withReopenTrace(causa: Causa): Causa {
   return {
@@ -41,14 +44,14 @@ interface CausasState {
   selectedCausaId: string;
   saveStatus: SaveStatus;
   saveRetryNonce: number;
-  selectedFaseFilter: FaseProcedimental | "Todas";
+  selectedFaseFilter: CausaFaseFilter;
   searchQuery: string;
 
   setCausas: Dispatch<SetStateAction<Causa[]>>;
   setSelectedCausaId: (id: string) => void;
   setSaveStatus: Dispatch<SetStateAction<SaveStatus>>;
   requestSaveRetry: () => void;
-  setSelectedFaseFilter: (filter: FaseProcedimental | "Todas") => void;
+  setSelectedFaseFilter: (filter: CausaFaseFilter) => void;
   setSearchQuery: (query: string) => void;
 
   handleCreateCausa: (params: {

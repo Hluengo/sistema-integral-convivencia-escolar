@@ -67,6 +67,8 @@ export function useCausaWorkspace({
     const trimmedQuery = searchQuery.trim().toLowerCase();
     return causas.filter((causa) => {
       if (causa.estadoActual === EstadoCausa.CAUSA_CERRADA) return false;
+      // "Cerrados" se pinta con ClosedCases: el listado activo queda vacío.
+      if (selectedFaseFilter === "Cerrados") return false;
       if (
         selectedFaseFilter !== "Todas" &&
         getCausaOperationalPhase(causa) !== selectedFaseFilter
