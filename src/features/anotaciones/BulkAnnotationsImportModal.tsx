@@ -214,14 +214,14 @@ export default function BulkAnnotationsImportModal({
           <div className="flex items-start justify-between gap-3">
             <div>
               <p className="mb-1 text-xs font-medium tracking-wide text-neutral-500">
-                Anotaciones <span className="mx-1 text-neutral-400">·</span>{" "}
+                Anotaciones <span className="mx-1 text-neutral-500">·</span>{" "}
                 Importación masiva
               </p>
               <h2 className="text-2xl font-bold tracking-tight text-neutral-900">
                 Importar fichas PDF{" "}
                 {preview && (
                   <>
-                    <span className="font-normal text-neutral-400">—</span>{" "}
+                    <span className="font-normal text-neutral-500">—</span>{" "}
                     {preview.detected_course}
                   </>
                 )}
@@ -232,7 +232,7 @@ export default function BulkAnnotationsImportModal({
               aria-label="Cerrar importación"
               onClick={closeSafely}
               disabled={busy}
-              className="rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-600 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <X className="h-6 w-6" aria-hidden="true" />
             </button>
@@ -256,7 +256,7 @@ export default function BulkAnnotationsImportModal({
                           ? "font-bold text-brand-700"
                           : done
                             ? "font-semibold text-neutral-600"
-                            : "font-medium text-neutral-400"
+                            : "font-medium text-neutral-500"
                       }`}
                     >
                       {label}
@@ -268,7 +268,7 @@ export default function BulkAnnotationsImportModal({
           </nav>
         </header>
 
-        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto bg-[#F8FAFC] px-6 py-6">
+        <div className="min-h-0 flex-1 space-y-6 overflow-y-auto bg-surface-sunken px-6 py-6">
           <div role="status" aria-live="polite">
             {busy && (
               <p className="rounded-xl border border-neutral-200 bg-white p-3 text-sm text-neutral-700">
@@ -539,7 +539,7 @@ export default function BulkAnnotationsImportModal({
                         setSearch(event.target.value);
                         setPage(0);
                       }}
-                      className="w-full rounded-xl border border-neutral-300 bg-white py-2 pr-4 pl-9 text-sm placeholder:text-neutral-400 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none"
+                      className="w-full rounded-xl border border-neutral-300 bg-white py-2 pr-4 pl-9 text-sm placeholder:text-neutral-500 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 focus:outline-none"
                     />
                   </label>
                 </div>
@@ -554,7 +554,7 @@ export default function BulkAnnotationsImportModal({
                       Anotaciones nuevas, registros conservados y carta
                       resultante por estudiante
                     </caption>
-                    <thead className="border-b border-neutral-200 bg-neutral-50/90 text-[11px] font-bold tracking-wider text-neutral-600 uppercase">
+                    <thead className="border-b border-neutral-200 bg-neutral-50/90 text-11px font-bold tracking-wider text-neutral-600 uppercase">
                       <tr>
                         <th scope="col" className="px-6 py-3">
                           Estudiante
@@ -625,7 +625,7 @@ export default function BulkAnnotationsImportModal({
                                     <span className="font-medium text-neutral-800">
                                       {student.pending_letter}
                                     </span>{" "}
-                                    <span className="text-neutral-400">·</span>{" "}
+                                    <span className="text-neutral-500">·</span>{" "}
                                     <span className="font-medium text-grave-700">
                                       {result
                                         ? "Pendiente"
@@ -637,7 +637,7 @@ export default function BulkAnnotationsImportModal({
                                     <span className="font-medium text-neutral-800">
                                       {student.current_letter ?? "Sin carta"}
                                     </span>{" "}
-                                    <span className="text-neutral-400">·</span>{" "}
+                                    <span className="text-neutral-500">·</span>{" "}
                                     <span className="font-normal text-neutral-500">
                                       {student.current_letter
                                         ? "Conserva su estado"
@@ -655,7 +655,7 @@ export default function BulkAnnotationsImportModal({
                                       setExpandedStudent(expanded ? null : key)
                                     }
                                     aria-expanded={expanded}
-                                    className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-400 transition-colors hover:text-brand-700"
+                                    className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500 transition-colors hover:text-brand-700"
                                   >
                                     Ver detalle
                                     <ChevronDown
@@ -676,7 +676,7 @@ export default function BulkAnnotationsImportModal({
                                 aria-label={`Detalle de anotaciones nuevas de ${displayName(student.matched_name ?? student.source_name)}`}
                               >
                                 <td colSpan={6} className="px-6 py-4">
-                                  <p className="mb-2 text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
+                                  <p className="mb-2 text-11px font-bold tracking-wider text-neutral-500 uppercase">
                                     Anotaciones nuevas de{" "}
                                     {displayName(
                                       student.matched_name ??
@@ -790,7 +790,7 @@ export default function BulkAnnotationsImportModal({
                             className="flex items-center justify-between"
                           >
                             <span>{label}</span>
-                            <strong className="rounded bg-grave-100/70 px-2 py-0.5 text-[11px] font-bold text-grave-900">
+                            <strong className="rounded bg-grave-100/70 px-2 py-0.5 text-11px font-bold text-grave-900">
                               {count}
                             </strong>
                           </li>
@@ -798,7 +798,7 @@ export default function BulkAnnotationsImportModal({
                       </ul>
                     )}
                   </div>
-                  <p className="mt-4 border-t border-grave-200/60 pt-3 text-[11px] leading-relaxed text-grave-800/90">
+                  <p className="mt-4 border-t border-grave-200/60 pt-3 text-11px leading-relaxed text-grave-800/90">
                     Una carta nueva o un cambio de etapa queda pendiente. Si la
                     carta se mantiene, conserva su estado.
                   </p>
@@ -905,7 +905,7 @@ export default function BulkAnnotationsImportModal({
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <div className="p-4 px-5 transition-colors hover:bg-neutral-50/50">
-      <p className="text-[11px] font-bold tracking-wider text-neutral-500 uppercase">
+      <p className="text-11px font-bold tracking-wider text-neutral-500 uppercase">
         {label}
       </p>
       <p className="mt-1 text-2xl font-extrabold tracking-tight text-neutral-900 lg:text-3xl">

@@ -71,7 +71,7 @@ export default function IncidentePanel({
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-brand-800">
+          <span className="rounded-full bg-white px-2 py-1 font-semibold text-11px text-brand-800">
             {data.causas.length} expedientes vinculados
           </span>
           <button
@@ -169,14 +169,14 @@ export default function IncidentePanel({
                         <p className="font-semibold text-neutral-900 text-xs">
                           {activity.title}
                         </p>
-                        <p className="text-10px text-brand-800">
+                        <p className="text-11px text-brand-800">
                           {activity.kind === "hito" ? "Hito" : "Avance"} ·{" "}
                           {privacyMode
                             ? source?.nnaProtectedName
                             : source?.estudianteNombre}
                         </p>
                       </div>
-                      <time className="font-mono text-9px text-neutral-500">
+                      <time className="font-mono text-11px text-neutral-500">
                         {formatChileDateTime(activity.occurredAt)}
                       </time>
                     </div>

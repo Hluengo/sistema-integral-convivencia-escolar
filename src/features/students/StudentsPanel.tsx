@@ -506,19 +506,19 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                         <table className="w-full text-left">
                           <thead>
                             <tr className="border-neutral-100 border-b">
-                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
+                              <th scope="col" className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 Nombre
                               </th>
-                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
+                              <th scope="col" className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 RUN
                               </th>
-                              <th className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs sm:table-cell">
+                              <th scope="col" className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs sm:table-cell">
                                 Curso
                               </th>
-                              <th className="px-5 py-3 font-semibold text-neutral-700 text-xs">
+                              <th scope="col" className="px-5 py-3 font-semibold text-neutral-700 text-xs">
                                 Actividad
                               </th>
-                              <th className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs md:table-cell">
+                              <th scope="col" className="hidden px-5 py-3 font-semibold text-neutral-700 text-xs md:table-cell">
                                 Última actividad
                               </th>
                             </tr>
@@ -534,7 +534,7 @@ export default function StudentsPanel({ privacyMode }: StudentsPanelProps) {
                                   aria-label="Nombre del estudiante"
                                 >
                                   <div className="flex items-center gap-2.5">
-                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 font-bold text-10px text-brand-800">
+                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-brand-100 font-bold text-11px text-brand-800">
                                       {student.full_name
                                         .split(" ")
                                         .filter((w) => w.length > 2)

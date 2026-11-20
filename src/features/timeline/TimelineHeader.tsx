@@ -99,10 +99,10 @@ export default function TimelineHeader({
                   type="button"
                   onClick={onForceCloseClick}
                   className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-gravisima-200 bg-gravisima-50/40 px-3 py-1.5 text-xs font-medium text-gravisima-600 shadow-sm transition hover:border-gravisima-300 hover:bg-gravisima-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500"
-                  aria-label="Cerrar causa"
+                  aria-label="Cierre excepcional"
                 >
                   <LockKeyhole className="size-3.5" aria-hidden="true" />
-                  Cerrar causa
+                  Cierre excepcional
                 </button>
               </>
             )}
@@ -110,7 +110,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onDeleteClick}
-                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-400 transition hover:bg-gravisima-50 hover:text-gravisima-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-gravisima-50 hover:text-gravisima-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gravisima-500"
                 aria-label="Eliminar expediente"
               >
                 <Trash2 className="size-4" aria-hidden="true" />
@@ -120,7 +120,7 @@ export default function TimelineHeader({
               <button
                 type="button"
                 onClick={onClose}
-                className="inline-flex min-h-10 min-w-10 items-center justify-center rounded-lg p-2 text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
                 aria-label="Cerrar expediente"
                 title="Cerrar expediente"
               >

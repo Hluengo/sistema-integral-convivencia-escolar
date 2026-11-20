@@ -109,7 +109,7 @@ describe("getPhaseProgress", () => {
     assert.equal(items.completed, 1);
   });
 
-  it("mantiene 2 hitos de apelación y 2 de seguimiento", () => {
+  it("mantiene 2 hitos de apelación y 3 de seguimiento", () => {
     const checklist = causa([
       "chk_imp_1",
       "chk_imp_2",
@@ -120,9 +120,10 @@ describe("getPhaseProgress", () => {
       "chk_seg_2",
       "chk_seg_3",
       "chk_seg_4",
+      "chk_seg_5",
     ]);
 
     assert.equal(getPhaseProgress(checklist, "Apelación").total, 2);
-    assert.equal(getPhaseProgress(checklist, "Seguimiento").total, 2);
+    assert.equal(getPhaseProgress(checklist, "Seguimiento").total, 3);
   });
 });

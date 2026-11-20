@@ -174,7 +174,7 @@ export default function TemplateEditor() {
         <h3 className="font-semibold text-neutral-900 text-sm">
           Plantillas institucionales
         </h3>
-        <p className="mt-0.5 text-10px text-neutral-500">
+        <p className="mt-0.5 text-11px text-neutral-500">
           Administración de instrucciones para futuras generaciones de
           documentos.
         </p>
@@ -308,18 +308,18 @@ export default function TemplateEditor() {
           {selectedId ? (
             <>
               <div className="flex items-center justify-between border-neutral-100 border-b bg-white px-4 py-2">
-                <span className="font-medium text-10px text-neutral-500">
+                <span className="font-medium text-11px text-neutral-500">
                   {templates.find((t) => t.id === selectedId)?.label ||
                     selectedId}
                 </span>
                 <div className="flex items-center gap-2">
                   {saveSuccess === selectedId && (
-                    <span className="flex animate-fade-in items-center gap-1 font-medium text-9px text-leve-600">
+                    <span className="flex animate-fade-in items-center gap-1 font-medium text-11px text-leve-700">
                       <CheckCircle className="h-3 w-3" /> Guardado
                     </span>
                   )}
                   {saveError && (
-                    <span className="flex items-center gap-1 font-medium text-9px text-gravisima-600">
+                    <span className="flex items-center gap-1 font-medium text-11px text-gravisima-600">
                       <AlertCircle className="h-3 w-3" /> {saveError}
                     </span>
                   )}

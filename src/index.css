@@ -15,33 +15,33 @@
   --text-13px: 13px;
   --text-17px: 17px;
 
-  /* ===== PRIMARY: Institutional blue ===== */
-  --color-brand-50: #edf8fc;
-  --color-brand-100: #d9eff8;
-  --color-brand-150: #bfe4f2;
-  --color-brand-200: #9dd4e8;
-  --color-brand-300: #64b9d6;
-  --color-brand-400: #2498c0;
-  --color-brand-500: #0b78aa;
-  --color-brand-600: #086b98;
-  --color-brand-700: #075a80;
-  --color-brand-800: #064766;
-  --color-brand-900: #073b55;
-  --color-brand-950: #052a3d;
+  /* ===== PRIMARY: Navy (#1E3A8A) ===== */
+  --color-brand-50: #eef2ff;
+  --color-brand-100: #e0e7ff;
+  --color-brand-150: #c7d2fe;
+  --color-brand-200: #a5b4fc;
+  --color-brand-300: #818cf8;
+  --color-brand-400: #536dca;
+  --color-brand-500: #294b9f;
+  --color-brand-600: #1e3a8a;
+  --color-brand-700: #172f75;
+  --color-brand-800: #13265e;
+  --color-brand-900: #0f1f4f;
+  --color-brand-950: #0a1538;
 
-  /* ===== SECONDARY: Orange Energy (#F97316) ===== */
-  --color-secondary-50: #fff7ed;
-  --color-secondary-100: #ffedd5;
-  --color-secondary-200: #fed7aa;
-  --color-secondary-300: #fdba74;
-  --color-secondary-400: #fb923c;
-  --color-secondary-500: #f97316;
-  --color-secondary-600: #ea580c;
-  --color-secondary-700: #c2410c;
-  --color-secondary-800: #9a3412;
+  /* ===== ACCENT: Mint green (#108981) ===== */
+  --color-secondary-50: #edfafa;
+  --color-secondary-100: #d5f3f0;
+  --color-secondary-200: #abe7e1;
+  --color-secondary-300: #78d4cc;
+  --color-secondary-400: #3db5ab;
+  --color-secondary-500: #108981;
+  --color-secondary-600: #0d706a;
+  --color-secondary-700: #0b5b57;
+  --color-secondary-800: #084744;
 
   /* Neutral scale - modern, clean */
-  --color-neutral-50: #f3f7fa;
+  --color-neutral-50: #f5f7fa;
   --color-neutral-100: #e8f0f5;
   --color-neutral-150: #d9e5ec;
   --color-neutral-200: #c4d4df;
@@ -59,10 +59,10 @@
   --color-leve-50: #edfbf8;
   --color-leve-100: #d3f4ed;
   --color-leve-200: #a8e8dc;
-  --color-leve-500: #18b39d;
-  --color-leve-600: #0d9f8e;
-  --color-leve-700: #056b60;
-  --color-leve-800: #04574f;
+  --color-leve-500: #108981;
+  --color-leve-600: #0d706a;
+  --color-leve-700: #0b5b57;
+  --color-leve-800: #084744;
 
   /* Grave - Amber */
   --color-grave-50: #fffbeb;
@@ -110,11 +110,16 @@
   --color-danger-500: #ef4444;
   --color-danger-600: #dc2626;
 
-  --color-info-50: #edf8fc;
-  --color-info-100: #d9eff8;
-  --color-info-200: #bfe4f2;
-  --color-info-500: #0b78aa;
-  --color-info-600: #075a80;
+  --color-info-50: #eef2ff;
+  --color-info-100: #e0e7ff;
+  --color-info-200: #c7d2fe;
+  --color-info-500: #1e3a8a;
+  --color-info-600: #172f75;
+
+  /* Surfaces: page vs sunken panel. Text colors follow the 600/700 rule:
+     600 and below are fills and icons, 700 and above are text. */
+  --color-surface: #f5f7fa;
+  --color-surface-sunken: #eef2f7;
 
   /* Shadow scale */
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
@@ -149,7 +154,7 @@
 
 /* ===== BASE STYLES ===== */
 body {
-  background: var(--color-neutral-50);
+  background: var(--color-surface);
   color: var(--color-neutral-800);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

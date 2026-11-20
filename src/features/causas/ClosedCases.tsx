@@ -109,7 +109,7 @@ function ClosedCases({
 
         <div className="flex items-center gap-2">
           {/* Stats mini-card */}
-          <div className="hidden items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-10px sm:flex">
+          <div className="hidden items-center gap-3 rounded-lg border border-neutral-200 bg-white px-3 py-1.5 text-11px sm:flex">
             <div className="flex items-center gap-1.5 text-neutral-500">
               <BarChart3 className="h-3 w-3" />
               <span className="font-semibold text-neutral-700">
@@ -186,10 +186,10 @@ function ClosedCases({
                     <div className="min-w-0 flex-1">
                       {/* Header row */}
                       <div className="mb-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-mono font-semibold text-10px text-neutral-500">
+                        <span className="rounded border border-neutral-200/60 bg-neutral-50 px-2 py-0.5 font-mono font-semibold text-11px text-neutral-500">
                           {causa.id}
                         </span>
-                        <span className="flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-1.5 py-0.5 font-semibold text-8px text-success-700">
+                        <span className="flex items-center gap-1 rounded-full border border-success-200 bg-success-100 px-1.5 py-0.5 font-semibold text-11px text-success-700">
                           <CheckCircle2
                             className="h-2.5 w-2.5"
                             aria-hidden="true"
@@ -197,7 +197,7 @@ function ClosedCases({
                           Cerrado
                         </span>
                         <span
-                          className={`rounded px-1.5 py-0.5 font-bold text-8px ${
+                          className={`rounded px-1.5 py-0.5 font-bold text-11px ${
                             causa.tipoInfraccion === "Gravísima"
                               ? "bg-gravisima-100 text-gravisima-700"
                               : causa.tipoInfraccion === "Muy Grave"
@@ -216,13 +216,13 @@ function ClosedCases({
                         {privacyMode
                           ? causa.nnaProtectedName
                           : causa.estudianteNombre}
-                        <span className="ml-2 rounded border border-neutral-200/60 bg-neutral-50 px-1.5 py-0.5 align-middle font-medium text-10px text-neutral-600">
+                        <span className="ml-2 rounded border border-neutral-200/60 bg-neutral-50 px-1.5 py-0.5 align-middle font-medium text-11px text-neutral-600">
                           {causa.estudianteCurso}
                         </span>
                       </h3>
 
                       {/* Details */}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-10px text-neutral-600">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-11px text-neutral-600">
                         <span className="flex items-center gap-1">
                           <CalendarDays className="h-3 w-3 text-neutral-500" />
                           Abierto: {causa.fechaApertura}
@@ -246,7 +246,7 @@ function ClosedCases({
                       {/* Progress bar */}
                       <div className="mt-3 flex items-center gap-3">
                         <div className="max-w-xs flex-1">
-                          <div className="mb-1 flex items-center justify-between text-9px text-neutral-500">
+                          <div className="mb-1 flex items-center justify-between text-11px text-neutral-500">
                             <span>Debido proceso</span>
                             <span className="font-semibold text-neutral-600">
                               {completedCount}/{totalCount}
@@ -264,7 +264,7 @@ function ClosedCases({
                       </div>
 
                       {/* Context */}
-                      <p className="mt-2 line-clamp-1 border-neutral-200 border-l-2 pl-2 text-10px text-neutral-500 italic leading-relaxed">
+                      <p className="mt-2 line-clamp-1 border-neutral-200 border-l-2 pl-2 text-11px text-neutral-500 italic leading-relaxed">
                         {causa.observaciones}
                       </p>
                     </div>

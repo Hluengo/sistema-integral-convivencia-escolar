@@ -58,14 +58,14 @@ export function AnnotationStageCard({
             <Icon className={`size-4 ${iconColor}`} aria-hidden="true" />
           </span>
         </div>
-        <p className="mt-1 text-neutral-500 text-[10px]">{threshold}</p>
+        <p className="mt-1 text-neutral-500 text-11px">{threshold}</p>
         <div className="mt-2.5 flex flex-wrap items-baseline gap-x-1 gap-y-1">
           <p className="font-extrabold text-2xl text-neutral-900 leading-none tabular-nums">
             {counts.total}
           </p>
-          <p className="text-neutral-500 text-[11px]">alumnos</p>
+          <p className="text-neutral-500 text-11px">alumnos</p>
           {needsAction ? (
-            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-gravisima-50 px-1.5 py-0.5 font-bold text-gravisima-700 text-[9px] tabular-nums">
+            <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-gravisima-50 px-1.5 py-0.5 font-bold text-gravisima-700 text-11px tabular-nums">
               {counts.pending} por gestionar
             </span>
           ) : null}
@@ -92,7 +92,7 @@ export function AnnotationStageCard({
         ) : null}
       </div>
       {showWorkflow ? (
-        <dl className="mt-2.5 grid grid-cols-3 gap-1 border-slate-200/70 border-t pt-2.5 text-center text-[11px]">
+        <dl className="mt-2.5 grid grid-cols-3 gap-1 border-slate-200/70 border-t pt-2.5 text-center text-11px">
           <div title="Cartas pendientes: requieren redactar y gestionar firma">
             <dt className="text-neutral-500">Pend.</dt>
             <dd className="font-bold text-gravisima-600 tabular-nums">
@@ -113,7 +113,7 @@ export function AnnotationStageCard({
           </div>
         </dl>
       ) : (
-        <p className="mt-2.5 rounded-lg bg-slate-50 px-2.5 py-2 text-neutral-500 text-[11px] leading-snug">
+        <p className="mt-2.5 rounded-lg bg-slate-50 px-2.5 py-2 text-neutral-500 text-11px leading-snug">
           Seguimiento preventivo · sin trámite de firma requerido.
         </p>
       )}

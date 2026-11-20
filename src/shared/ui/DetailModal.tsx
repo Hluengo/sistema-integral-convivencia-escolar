@@ -55,7 +55,7 @@ export function DetailModalContent({
   return (
     <DialogContent
       hideClose
-      className={`flex h-[min(94vh,980px)] max-h-[calc(100vh-1rem)] w-[min(94vw,64rem)] max-w-none flex-col overflow-hidden border-slate-200 bg-[#F8FAFC] p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms] ${className}`}
+      className={`flex h-[min(94vh,980px)] max-h-[calc(100vh-1rem)] w-[min(94vw,64rem)] max-w-none flex-col overflow-hidden border-slate-200 bg-surface-sunken p-0 shadow-2xl reduce-motion:[animation-duration:0ms,transition-duration:0ms] ${className}`}
       aria-label={ariaLabel}
     >
       {children}
@@ -90,7 +90,7 @@ export function DetailModalHeader({
             >
               {title}
             </h2>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-neutral-600 text-[11px]">
+            <div className="mt-1 flex flex-wrap items-center gap-1.5 text-neutral-600 text-11px">
               {metadata}
             </div>
           </div>

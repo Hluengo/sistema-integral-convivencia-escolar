@@ -146,6 +146,27 @@ export const getFaseForEstado = (estado: EstadoCausa) => {
   return MAPPED_STATES[estado]?.fase || "Recepción";
 };
 
+export const CIERRE_COMUNICACION_OBSERVACIONES = `DEBE ENVIAR EL SIGUIENTE CORREO A APODERADO DENUNCIANTE
+
+Asunto: Comunicación de cierre del procedimiento de convivencia escolar — Expediente [N.° de expediente]
+
+Estimada familia:
+
+Junto con saludar, informamos a ustedes que ha concluido el procedimiento de convivencia escolar correspondiente al expediente [N.° de expediente], iniciado a partir de la denuncia presentada por ustedes.
+
+Luego de revisar los antecedentes y concluir las etapas correspondientes, incluida la instancia de apelación o reconsideración cuando procedió, el establecimiento determinó la responsabilidad de la parte denunciada respecto de los hechos acreditados y aplicó las medidas formativas y disciplinarias previstas en el Reglamento Interno de Convivencia Escolar.
+
+En su calidad de parte denunciante, les comunicamos formalmente el resultado del procedimiento y la adopción de las medidas correspondientes. No obstante, por tratarse de antecedentes personales de un tercero, el establecimiento debe resguardar la privacidad de la parte denunciada y, por ello, no puede informar el detalle de sus medidas individuales.
+
+Esta reserva se limita exclusivamente a los antecedentes personales y disciplinarios de terceros. Si alguna medida de protección, resguardo o acompañamiento involucra directamente a su familia, les informaremos su alcance, duración y la forma en que será implementada.
+
+Con esta comunicación se deja constancia del cierre del procedimiento.
+
+Saludos cordiales,
+
+Equipo de Convivencia Escolar
+[Nombre del establecimiento]`;
+
 export const getBaseChecklist = (
   proceduralModelVersion: 1 | 2 = 1,
 ): ChecklistItem[] => [
@@ -396,6 +417,15 @@ export const getBaseChecklist = (
     : []),
 
   // 5. Estado de Seguimiento. chk_seg_2 se integra con el plan/medida.
+  {
+    id: "chk_seg_5",
+    label: "Enviar comunicación de cierre al apoderado denunciante",
+    descripcion:
+      "Recordatorio para enviar manualmente la comunicación estándar después de resolver la apelación.",
+    completado: false,
+    observaciones: CIERRE_COMUNICACION_OBSERVACIONES,
+    requeridoPor: "Reglamento Interno",
+  },
   {
     id: "chk_seg_1",
     label: "Seguimiento realizado",

@@ -14,7 +14,7 @@ export default function AppFooter() {
           Fiscalización &amp; Debido Proceso 2026
         </span>
       </div>
-      <p className="mx-auto max-w-lg px-4 font-mono text-[10px] text-neutral-600 leading-relaxed">
+      <p className="mx-auto max-w-lg px-4 font-mono text-11px text-neutral-600 leading-relaxed">
         Circular N° 482 · Ley 21809 · Resguardo de NNA en todo el territorio
         nacional
       </p>

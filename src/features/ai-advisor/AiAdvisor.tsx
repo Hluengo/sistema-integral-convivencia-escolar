@@ -171,13 +171,13 @@ export default function AiAdvisor() {
             <h3 className="font-sans font-semibold text-neutral-900 text-xs">
               Revisor de Debido Proceso
             </h3>
-            <p className="mt-0.25 font-medium text-9px text-neutral-600">
+            <p className="mt-0.25 font-medium text-11px text-neutral-600">
               Revisa el expediente • No sanciona
             </p>
           </div>
         </div>
         <div
-          className={`rounded-full border px-2.5 py-1 font-semibold text-9px ${
+          className={`rounded-full border px-2.5 py-1 font-semibold text-11px ${
             isLoading
               ? "border-grave-200 bg-grave-50 text-grave-700"
               : "border-leve-200 bg-leve-50 text-neutral-800"
@@ -225,7 +225,7 @@ export default function AiAdvisor() {
                       : "rounded-tr-none border-brand-100 bg-brand-50/70 text-neutral-900 shadow-xs"
                   }`}
                 >
-                  <span className="mb-1 block font-semibold text-8px text-neutral-700 uppercase">
+                  <span className="mb-1 block font-semibold text-11px text-neutral-700 uppercase">
                     {isModel ? "Revisor" : "Usted"}
                   </span>
                   <MessageContent text={m.content} />
@@ -275,7 +275,7 @@ export default function AiAdvisor() {
                 key={p}
                 type="button"
                 onClick={() => handleSendMessage(p)}
-                className="min-h-11 rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-left font-medium text-10px text-neutral-700 leading-normal transition-colors hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs sm:p-2.5 sm:text-11px"
+                className="min-h-11 rounded-lg border border-neutral-200 bg-neutral-50 p-2 text-left font-medium text-11px text-neutral-700 leading-normal transition-colors hover:border-brand-200/60 hover:bg-brand-50/40 hover:shadow-xs sm:p-2.5"
               >
                 {p}
               </button>
@@ -296,7 +296,7 @@ export default function AiAdvisor() {
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               placeholder="Escriba su consulta legal..."
-              className="min-h-11 flex-1 bg-transparent py-2.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 focus:outline-none"
+              className="min-h-11 flex-1 bg-transparent py-2.5 font-medium text-neutral-800 text-xs placeholder-neutral-500 focus:outline-none"
               aria-label="Mensaje para el asesor legal"
             />
           </div>

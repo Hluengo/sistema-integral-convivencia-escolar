@@ -76,7 +76,7 @@ export default function InteractiveTimeline({
 
   return (
     <TimelineProvider value={timelineValue}>
-      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-[#F8FAFC] text-slate-800 antialiased">
+      <div className="flex h-full min-h-0 flex-col overflow-hidden bg-surface-sunken text-slate-800 antialiased">
         <TimelineHeader
           causa={causa}
           currentRole={currentRole}
@@ -121,14 +121,14 @@ export default function InteractiveTimeline({
           breaches={breaches}
           selectedPhase={selectedPhase}
           onSelectPhase={setSelectedPhase}
-          onRegisterHito={() => {
+          onRegisterHito={(phase) => {
             setActiveTab("ruta");
-            setSelectedPhase(currentFase);
+            setSelectedPhase(phase ?? currentFase);
           }}
         />
         <footer className="flex flex-col items-center justify-between gap-2 border-slate-200 border-t bg-white/70 px-8 py-4 text-xs text-slate-600 sm:flex-row">
           <span>Sistema Integral de Gestión de Convivencia Escolar · v3.4</span>
-          <span className="font-mono text-[11px]">
+          <span className="font-mono text-11px">
             Expediente auditado bajo normativa de confidencialidad legal
           </span>
         </footer>

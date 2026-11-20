@@ -105,7 +105,7 @@ export default function ExpedienteHistoryPanel({
                         {fecha}
                       </span>
                       {hora && (
-                        <span className="mt-0.5 block font-mono text-[11px] text-neutral-400">
+                        <span className="mt-0.5 block font-mono text-11px text-neutral-500">
                           {hora}
                         </span>
                       )}
@@ -115,20 +115,20 @@ export default function ExpedienteHistoryPanel({
                         <h4 className="font-bold text-neutral-900 text-sm">
                           {entry.title}
                         </h4>
-                        <span className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-medium text-[10px] text-neutral-600">
+                        <span className="rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-medium text-11px text-neutral-600">
                           {entry.type}
                         </span>
-                        <span className="rounded border border-brand-200 bg-brand-50 px-1.5 py-0.5 font-medium text-[10px] text-brand-700">
+                        <span className="rounded border border-brand-200 bg-brand-50 px-1.5 py-0.5 font-medium text-11px text-brand-700">
                           {entry.origin === "grupal" ? "Grupal" : "Individual"}
                         </span>
-                        <span className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-[10px] text-neutral-600">
+                        <span className="rounded border border-neutral-200 bg-neutral-50 px-1.5 py-0.5 font-medium text-11px text-neutral-600">
                           {STATUS_LABELS[entry.status]}
                         </span>
                       </div>
                       <p className="whitespace-pre-wrap leading-relaxed text-neutral-600 text-xs">
                         {entry.description}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-10px text-neutral-500">
+                      <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-11px text-neutral-500">
                         {entry.responsible && (
                           <span>Responsable: {entry.responsible}</span>
                         )}
@@ -158,7 +158,7 @@ export default function ExpedienteHistoryPanel({
                                 key={`${path}-${name}`}
                                 type="button"
                                 onClick={() => void openDocument(path)}
-                                className="inline-flex items-center gap-1.5 text-10px font-medium text-brand-700 hover:underline"
+                                className="inline-flex items-center gap-1.5 text-11px font-medium text-brand-700 hover:underline"
                               >
                                 <FileText
                                   className="size-3"
@@ -173,7 +173,7 @@ export default function ExpedienteHistoryPanel({
                             ) : (
                               <span
                                 key={name}
-                                className="inline-flex items-center gap-1.5 text-10px font-medium text-neutral-600"
+                                className="inline-flex items-center gap-1.5 text-11px font-medium text-neutral-600"
                               >
                                 <FileText
                                   className="size-3"
@@ -186,7 +186,7 @@ export default function ExpedienteHistoryPanel({
                         </div>
                       )}
                       {entry.correctionReason && (
-                        <p className="mt-2 flex items-start gap-1.5 text-10px text-grave-800">
+                        <p className="mt-2 flex items-start gap-1.5 text-11px text-grave-800">
                           <AlertTriangle
                             className="mt-0.5 size-3 shrink-0"
                             aria-hidden="true"

@@ -66,7 +66,7 @@ export function SidebarUserMenu({
         <button
           type="button"
           onClick={onLogout}
-          className="shrink-0 cursor-pointer rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-800"
+          className="inline-flex min-h-11 min-w-11 shrink-0 cursor-pointer items-center justify-center rounded-lg text-neutral-500 transition-colors hover:bg-neutral-200 hover:text-neutral-800"
           aria-label="Cerrar sesión"
           title="Cerrar sesión"
         >
@@ -108,7 +108,7 @@ export function SidebarAulaSeguraAlert({
         <p className="font-bold text-gravisima-700 text-xs leading-tight">
           {count} alerta{count !== 1 ? "s" : ""} crítica{count !== 1 ? "s" : ""}
         </p>
-        <p className="mt-0.5 font-medium text-10px text-gravisima-600 leading-tight">
+        <p className="mt-0.5 font-medium text-11px text-gravisima-600 leading-tight">
           Ley Aula Segura · Acción urgente
         </p>
       </div>

@@ -166,7 +166,7 @@ export default function UploadAnalyzeStep({
               <p className="font-bold text-2xl text-leve-700">
                 {summary.positivas}
               </p>
-              <p className="mt-1 font-medium text-leve-600 text-xs">
+              <p className="mt-1 font-medium text-leve-700 text-xs">
                 Positivas
               </p>
             </div>

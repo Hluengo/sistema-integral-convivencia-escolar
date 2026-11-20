@@ -370,18 +370,18 @@ const BitacoraTabContent = memo(function BitacoraTabContent({
                           {entry.titulo}
                         </h3>
                         <span
-                          className={`rounded-full border px-2 py-0.5 text-10px font-semibold ${style.tone}`}
+                          className={`rounded-full border px-2 py-0.5 text-11px font-semibold ${style.tone}`}
                         >
                           {style.label}
                         </span>
                         {isNotificacion && causa.apoderadoEmail && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-10px font-medium text-blue-700">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-11px font-medium text-blue-700">
                             <Mail className="size-3" /> Enviado a{" "}
                             {causa.apoderadoEmail}
                           </span>
                         )}
                         {hasCorreo && (
-                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-10px font-medium text-emerald-700">
+                          <span className="inline-flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-11px font-medium text-emerald-700">
                             <Phone className="size-3" /> Correo registrado
                           </span>
                         )}
@@ -392,7 +392,7 @@ const BitacoraTabContent = memo(function BitacoraTabContent({
                     </div>
                     {entry.causaOrigenId &&
                       entry.causaOrigenId !== causa.id && (
-                        <p className="mt-1 inline-flex rounded-full border border-info-200 bg-info-50 px-2 py-0.5 text-10px font-semibold text-info-800">
+                        <p className="mt-1 inline-flex rounded-full border border-info-200 bg-info-50 px-2 py-0.5 text-11px font-semibold text-info-800">
                           Registro grupal heredado · solo lectura
                         </p>
                       )}

@@ -236,7 +236,7 @@ export default function EditAnnotationsTab({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Buscar por texto…"
-            className="w-full bg-transparent outline-none placeholder:text-neutral-400"
+            className="w-full bg-transparent outline-none placeholder:text-neutral-500"
           />
         </label>
         <label className="flex items-center gap-2 text-sm text-neutral-600">
@@ -415,7 +415,7 @@ export default function EditAnnotationsTab({
                       </span>
                     </div>
                     <div className="rounded-lg border border-neutral-100 bg-neutral-50 px-3.5 py-3">
-                      <p className="mb-1 font-semibold text-neutral-500 text-[11px] uppercase tracking-wide">
+                      <p className="mb-1 font-semibold text-neutral-500 text-11px uppercase tracking-wide">
                         Descripción de la anotación
                       </p>
                       <p className="whitespace-pre-wrap text-neutral-800 text-sm leading-relaxed">
@@ -423,7 +423,7 @@ export default function EditAnnotationsTab({
                       </p>
                     </div>
                     {registrar && (
-                      <p className="text-neutral-400 text-xs">
+                      <p className="text-neutral-500 text-xs">
                         Registrada por {registrar}
                       </p>
                     )}
@@ -432,7 +432,7 @@ export default function EditAnnotationsTab({
                     type="button"
                     onClick={() => startEditing(annotation)}
                     disabled={isSaving}
-                    className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-50"
+                    className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-neutral-200 text-neutral-500 transition-colors hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500/30 disabled:opacity-50"
                     aria-label={`Editar anotación ${annotation.type} del ${formatDate(annotation.date)}`}
                     title="Editar esta anotación"
                   >

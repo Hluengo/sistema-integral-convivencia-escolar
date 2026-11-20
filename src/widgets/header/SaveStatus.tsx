@@ -15,9 +15,9 @@ const ICONS = {
 };
 
 const COLORS = {
-  idle: "text-neutral-400",
+  idle: "text-neutral-500",
   saving: "text-brand-600 animate-spin",
-  saved: "text-leve-600",
+  saved: "text-leve-700",
   error: "text-gravisima-600",
 };
 

@@ -55,7 +55,7 @@ export default memo(function MetricCard({
     >
       <div className="mb-3 flex items-start justify-between">
         <div>
-          <span className="font-semibold text-[#0f172a] text-[13px]">
+          <span className="font-semibold text-[#0f172a] text-13px">
             {label}
           </span>
           {sublabel && (

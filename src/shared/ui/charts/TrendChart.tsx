@@ -87,7 +87,7 @@ export function MonthlyBars({
           <div className="space-y-0.5 text-center">
             <span
               className={`block truncate font-medium text-11px ${
-                point.isCurrent ? "text-neutral-800" : "text-neutral-400"
+                point.isCurrent ? "text-neutral-800" : "text-neutral-500"
               }`}
             >
               {point.label}
@@ -137,7 +137,7 @@ export function TrendChart({
             <LegendPill key={item.label} item={item} />
           ))}
           {!dashboard ? (
-            <span className="inline-flex items-center gap-1.5 text-neutral-400">
+            <span className="inline-flex items-center gap-1.5 text-neutral-500">
               <span
                 className="h-2.5 w-2.5 rounded-full bg-brand-600"
                 aria-hidden="true"
@@ -160,7 +160,7 @@ export function TrendChart({
             <p className="mt-1 text-neutral-500 text-xs">{description}</p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-white px-2 py-1 font-semibold text-10px text-neutral-500 uppercase tracking-wide">
+            <span className="rounded-full bg-white px-2 py-1 font-semibold text-11px text-neutral-500 uppercase tracking-wide">
               {badge}
             </span>
             <button
@@ -189,7 +189,7 @@ export function TrendChart({
                 point.isCurrent
                   ? "bg-brand-50 text-brand-800"
                   : point.isObserved === false
-                    ? "bg-neutral-100 text-neutral-400"
+                    ? "bg-neutral-100 text-neutral-600"
                     : "bg-white text-neutral-700"
               }`}
             >

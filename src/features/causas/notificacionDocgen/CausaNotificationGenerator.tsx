@@ -341,7 +341,7 @@ export default function CausaNotificationGenerator({
               </p>
             </div>
             {documentStatus && (
-              <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-10px text-neutral-600">
+              <span className="rounded-full bg-neutral-100 px-2.5 py-1 font-semibold text-11px text-neutral-600">
                 Estado: {documentStatus}
               </span>
             )}
@@ -378,7 +378,7 @@ export default function CausaNotificationGenerator({
             <div>
               <label
                 htmlFor="notificacion-apoderado-compact"
-                className="mb-1 block text-[10px] font-medium text-neutral-700"
+                className="mb-1 block text-11px font-medium text-neutral-700"
               >
                 Nombre del Apoderado/a
               </label>
@@ -395,7 +395,7 @@ export default function CausaNotificationGenerator({
             <div>
               <label
                 htmlFor="notificacion-emitido-por-compact"
-                className="mb-1 block text-[10px] font-medium text-neutral-700"
+                className="mb-1 block text-11px font-medium text-neutral-700"
               >
                 Encargado/a de indagación
               </label>
@@ -414,7 +414,7 @@ export default function CausaNotificationGenerator({
                 variant="secondary"
                 onClick={() => void onSaveDraft(currentSnapshot)}
                 disabled={isProcessing}
-                className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md px-2.5 py-1.5 text-11px font-semibold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <FileSignature className="mr-1 inline size-3" /> Guardar
                 borrador
@@ -423,7 +423,7 @@ export default function CausaNotificationGenerator({
                 variant="custom"
                 onClick={() => void onMarkNotified(currentSnapshot)}
                 disabled={isProcessing}
-                className="rounded-md border border-leve-200 bg-leve-50 px-2.5 py-1.5 text-[10px] font-semibold text-leve-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-md border border-leve-200 bg-leve-50 px-2.5 py-1.5 text-11px font-semibold text-leve-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <CheckCircle2 className="mr-1 inline size-3" />
                 {isProcessing ? "Procesando…" : "Marcar como notificada"}
@@ -432,7 +432,7 @@ export default function CausaNotificationGenerator({
             {feedback && (
               <p
                 role={feedback.tone === "error" ? "alert" : "status"}
-                className="text-[10px] font-medium text-neutral-600 sm:col-span-2"
+                className="text-11px font-medium text-neutral-600 sm:col-span-2"
               >
                 {feedback.text}
               </p>
@@ -441,7 +441,7 @@ export default function CausaNotificationGenerator({
         )}
         {compact && (
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2">
-            <div className="flex items-center gap-2 text-[10px]">
+            <div className="flex items-center gap-2 text-11px">
               <span className="rounded bg-emerald-50 px-2 py-1 font-semibold text-emerald-700">
                 Foliación Digital Inmutable
               </span>
@@ -453,7 +453,7 @@ export default function CausaNotificationGenerator({
               <Button
                 variant="custom"
                 onClick={() => handlePrint()}
-                className="rounded-md bg-neutral-800 px-2.5 py-1.5 text-[10px] font-semibold text-white"
+                className="rounded-md bg-neutral-800 px-2.5 py-1.5 text-11px font-semibold text-white"
               >
                 <Printer className="mr-1 inline size-3" /> Imprimir
               </Button>
@@ -461,7 +461,7 @@ export default function CausaNotificationGenerator({
                 <Button
                   variant="secondary"
                   onClick={() => handlePrint()}
-                  className="rounded-md px-2.5 py-1.5 text-[10px] font-semibold"
+                  className="rounded-md px-2.5 py-1.5 text-11px font-semibold"
                 >
                   Reimprimir
                 </Button>

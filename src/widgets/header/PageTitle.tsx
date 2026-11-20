@@ -13,9 +13,9 @@ export default function PageTitle({ currentView }: PageTitleProps) {
 
   return (
     <div className="hidden min-w-0 shrink-0 sm:block">
-      <h1 className="truncate font-bold text-neutral-900 text-sm leading-tight">
+      <p className="truncate font-bold text-neutral-900 text-sm leading-tight">
         {viewMeta.title}
-      </h1>
+      </p>
       <p className="truncate font-medium text-neutral-600 text-xs">
         {viewMeta.subtitle}
       </p>

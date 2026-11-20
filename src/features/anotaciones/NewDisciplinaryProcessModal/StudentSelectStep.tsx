@@ -89,7 +89,7 @@ export default function StudentSelectStep({
               </div>
               {s.disciplinary_status && (
                 <span
-                  className={`ml-2 shrink-0 rounded-full px-2.5 py-1 font-bold text-10px ${statusStyle(s.disciplinary_status)}`}
+                  className={`ml-2 shrink-0 rounded-full px-2.5 py-1 font-bold text-11px ${statusStyle(s.disciplinary_status)}`}
                 >
                   {s.disciplinary_status}
                 </span>

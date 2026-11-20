@@ -90,12 +90,12 @@ export default function RutaYoloPhaseRail({
             <p className="font-bold text-neutral-950 text-sm uppercase tracking-wider">
               Índice foliado · Etapa {activePhaseIndex + 1}
             </p>
-            <p className="mt-1 text-neutral-600 text-[11px]">
+            <p className="mt-1 text-neutral-600 text-11px">
               Actuaciones de la fase actual
             </p>
           </div>
           <span
-            className={`rounded-full px-2 py-1 font-semibold text-10px ${activeTone.softBg} ${activeTone.softText}`}
+            className={`rounded-full px-2 py-1 font-semibold text-11px ${activeTone.softBg} ${activeTone.softText}`}
           >
             {phaseItems.length} hitos
           </span>
@@ -129,7 +129,7 @@ export default function RutaYoloPhaseRail({
                     {phase.phase}
                   </span>
                   <span
-                    className={`rounded-full px-2 py-0.5 font-bold text-10px ${isCurrent ? `${tone.softBg} ${tone.softText}` : "bg-neutral-100 text-neutral-600"}`}
+                    className={`rounded-full px-2 py-0.5 font-bold text-11px ${isCurrent ? `${tone.softBg} ${tone.softText}` : "bg-neutral-100 text-neutral-600"}`}
                   >
                     {phase.completed}/{phase.total}
                   </span>
@@ -156,13 +156,13 @@ export default function RutaYoloPhaseRail({
                                 <Check className="size-3" aria-hidden="true" />
                               </span>
                               <span className="min-w-0">
-                                <span className="block font-semibold text-neutral-900 text-[11px] leading-snug">
+                                <span className="block font-semibold text-neutral-900 text-11px leading-snug">
                                   {item.label}
                                 </span>
-                                <span className="mt-1 block text-neutral-500 text-[10px] leading-snug">
+                                <span className="mt-1 block text-neutral-500 text-11px leading-snug">
                                   {item.descripcion}
                                 </span>
-                                <span className="mt-1 flex flex-wrap gap-1 text-[9px] leading-snug">
+                                <span className="mt-1 flex flex-wrap gap-1 text-11px leading-snug">
                                   <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
                                     {item.requeridoPor}
                                   </span>
@@ -182,7 +182,7 @@ export default function RutaYoloPhaseRail({
                                   </span>
                                 </span>
                                 {item.completado && (
-                                  <span className="mt-1 block text-[9px] text-neutral-500">
+                                  <span className="mt-1 block text-11px text-neutral-500">
                                     Por:{" "}
                                     {item.registradoPor ||
                                       "Equipo de Convivencia Escolar"}
@@ -202,7 +202,7 @@ export default function RutaYoloPhaseRail({
                                     deadlineExpiryRegistered ||
                                     isCreatingManualLog
                                   }
-                                  className="w-full text-left text-[10px] font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
+                                  className="w-full text-left text-11px font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
                                 >
                                   {deadlineExpiryRegistered
                                     ? "✓ Plazo vencido registrado en historial"
@@ -213,7 +213,7 @@ export default function RutaYoloPhaseRail({
                                 {manualLogError && (
                                   <p
                                     role="alert"
-                                    className="mt-1 text-[10px] text-red-700"
+                                    className="mt-1 text-11px text-red-700"
                                   >
                                     {manualLogError}
                                   </p>

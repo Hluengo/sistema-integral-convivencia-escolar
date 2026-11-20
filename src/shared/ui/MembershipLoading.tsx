@@ -49,7 +49,7 @@ export function MembershipLoading({
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto" />
         <p className="text-neutral-600 text-sm">Verificando membresía...</p>
         {authMode === "transition" && legacyFallbackUsed && (
-          <p className="text-grave-600 text-xs">
+          <p className="text-grave-700 text-xs">
             Modo transición — usando credenciales heredadas como respaldo.
           </p>
         )}

@@ -9,6 +9,7 @@ import {
   FileText,
 } from "lucide-react";
 import type { Causa } from "../../shared/lib/types";
+import type { FaseProcedimental } from "../../shared/lib/types";
 import {
   extractConductaFromObservation,
   getConductaReglamentada,
@@ -17,11 +18,12 @@ import { getMaxPlazoInvestigacionDias } from "../../shared/lib/legalCompliance/c
 import { getCausaDeadline } from "../causas/causaPresentation";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { formatChileDate } from "../../shared/lib/dateTime";
+import { canSendClosureCommunication } from "../../shared/lib/domain/proceduralTransitions";
 
 interface ResumenTabProps {
   causa: Causa;
   breaches: string[];
-  onRegisterHito?: () => void;
+  onRegisterHito?: (phase?: FaseProcedimental) => void;
 }
 
 const toneClasses = {
@@ -53,6 +55,10 @@ export default memo(function ResumenTab({
   const nextAction = summary.nextChecklistItem
     ? `Próximo hito · ${summary.nextChecklistItem.label} (fase ${summary.nextChecklistPhase})`
     : "Sin hito pendiente en la ruta visible";
+  const closureCommunicationPending =
+    causa.checklistDebidoProceso.some(
+      (item) => item.id === "chk_seg_5" && !item.completado,
+    ) && canSendClosureCommunication(causa).allowed;
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-1 items-start gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.85fr)]">
@@ -208,8 +214,8 @@ export default memo(function ResumenTab({
         <aside className="space-y-3">
           <button
             type="button"
-            onClick={onRegisterHito}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#00628F] px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#005177] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#00628F] focus-visible:ring-offset-2"
+            onClick={() => onRegisterHito?.()}
+            className="flex w-full items-center justify-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2"
           >
             <span className="text-base leading-none">+</span> Registrar Hito
           </button>
@@ -247,6 +253,27 @@ export default memo(function ResumenTab({
               </div>
             </dl>
           </section>
+          {closureCommunicationPending && (
+            <section
+              role="alert"
+              className="rounded-xl border-2 border-amber-300 bg-amber-50 p-3 shadow-sm"
+            >
+              <h2 className="text-sm font-bold text-amber-950">
+                Comunicación de cierre pendiente
+              </h2>
+              <p className="mt-1 text-xs leading-relaxed text-amber-900">
+                Debe enviar manualmente la comunicación al apoderado denunciante
+                del expediente <strong>{causa.id}</strong>.
+              </p>
+              <button
+                type="button"
+                onClick={() => onRegisterHito?.("Seguimiento")}
+                className="mt-3 min-h-10 rounded-lg bg-amber-700 px-3 py-2 font-semibold text-white text-xs hover:bg-amber-800"
+              >
+                Ir al hito
+              </button>
+            </section>
+          )}
           <section className="space-y-3 rounded-xl border border-neutral-200 bg-white p-3 shadow-sm">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-neutral-500">
@@ -279,7 +306,7 @@ export default memo(function ResumenTab({
                 />
               </div>
             </div>
-            <p className="flex items-center justify-end gap-1 pt-1 text-[11px] text-neutral-600">
+            <p className="flex items-center justify-end gap-1 pt-1 text-11px text-neutral-600">
               <Calendar className="size-3" aria-hidden="true" /> Cierre
               proyectado el {formatChileDate(deadline.deadlineDate)}
             </p>

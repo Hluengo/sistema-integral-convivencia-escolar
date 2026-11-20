@@ -476,7 +476,7 @@ export default function CartasTab({
             <button
               type="button"
               onClick={() => setShowGenerator(false)}
-              className="rounded-lg p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
+              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-neutral-100 hover:text-neutral-700"
               aria-label="Cerrar generador"
             >
               <XCircle className="h-5 w-5" />

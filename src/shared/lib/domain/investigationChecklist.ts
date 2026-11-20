@@ -49,7 +49,7 @@ export const ACTIVE_PHASE_ITEM_IDS: Readonly<
   Investigación: INVESTIGATION_ITEM_IDS,
   Resolución: ["chk_res_2", "chk_res_6"],
   Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_7"],
-  Seguimiento: ["chk_seg_1", "chk_seg_4"],
+  Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
 };
 
 type InvestigationItemId = (typeof INVESTIGATION_ITEM_IDS)[number];

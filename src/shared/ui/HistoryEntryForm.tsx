@@ -202,7 +202,7 @@ function HistoryEntryFormContent({
           onClick={closeForm}
           disabled={busy}
           aria-label="Cerrar formulario"
-          className="rounded-lg p-1.5 text-neutral-400 hover:bg-white hover:text-neutral-700 disabled:opacity-40"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-400 hover:bg-white hover:text-neutral-700 disabled:opacity-40"
         >
           <X className="h-4 w-4" aria-hidden="true" />
         </button>
@@ -217,7 +217,7 @@ function HistoryEntryFormContent({
             >
               Título
             </label>
-            <span className="text-neutral-400 text-xs">{title.length}/120</span>
+            <span className="text-neutral-500 text-xs">{title.length}/120</span>
           </div>
           <input
             id={titleId}
@@ -254,7 +254,7 @@ function HistoryEntryFormContent({
 
       <div>
         <div className="mb-1.5 flex justify-end">
-          <span className="text-neutral-400 text-xs">
+          <span className="text-neutral-500 text-xs">
             {description.length}/2.000
           </span>
         </div>
@@ -298,7 +298,7 @@ function HistoryEntryFormContent({
             rows={4}
             disabled={busy}
             placeholder="Pega aquí el contenido de la evidencia..."
-            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition placeholder:text-neutral-400 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
+            className="w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-neutral-900 text-sm outline-none transition placeholder:text-neutral-500 focus:border-brand-400 focus:ring-2 focus:ring-brand-500/20 disabled:opacity-60"
           />
         </label>
       </div>

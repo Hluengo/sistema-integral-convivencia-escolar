@@ -192,7 +192,7 @@ export default function AnotacionesView({ privacyMode }: AnotacionesViewProps) {
               corresponden a información local. Los nombres y RUT de los
               estudiantes se encuentran protegidos por normativa de privacidad.
             </p>
-            <p className="mt-1 font-mono text-10px text-gravisima-600">
+            <p className="mt-1 font-mono text-11px text-gravisima-600">
               Error: {dbError}
             </p>
           </div>

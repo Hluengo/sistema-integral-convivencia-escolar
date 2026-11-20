@@ -149,7 +149,7 @@ export default function StudentSummaryTab({
                   <Shield className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-neutral-500">
+                  <p className="text-11px font-bold uppercase tracking-[0.14em] text-neutral-500">
                     Resumen de anotaciones
                   </p>
                   <p className="mt-1 text-sm text-neutral-600">
@@ -186,7 +186,7 @@ export default function StudentSummaryTab({
             <div className="flex items-center justify-between rounded-xl border border-leve-100 bg-leve-50/50 p-3">
               <div>
                 <p className="text-xs font-semibold text-leve-700">Positivas</p>
-                <p className="text-3xl font-extrabold tabular-nums text-leve-600">
+                <p className="text-3xl font-extrabold tabular-nums text-leve-700">
                   {counts.positivas}
                 </p>
               </div>
@@ -322,7 +322,7 @@ export default function StudentSummaryTab({
               style={{ width: `${progress.percent}%` }}
             />
           </div>
-          <div className="mt-2 flex justify-between gap-3 text-[11px] font-medium text-neutral-500">
+          <div className="mt-2 flex justify-between gap-3 text-11px font-medium text-neutral-500">
             <span>Rango regular (0-5)</span>
             <span className="font-bold text-gravisima-600">
               {nextThreshold === null
@@ -347,7 +347,7 @@ export default function StudentSummaryTab({
           </p>
 
           <div className="mt-5 border-t border-neutral-100 pt-4">
-            <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-500">
+            <p className="text-11px font-bold uppercase tracking-[0.12em] text-neutral-500">
               Categorías detectadas en PDF
             </p>
             <div className="mt-3 space-y-2">
@@ -379,7 +379,7 @@ export default function StudentSummaryTab({
                 className="h-3.5 w-3.5 text-neutral-500"
                 aria-hidden="true"
               />
-              <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-neutral-500">
+              <p className="text-11px font-bold uppercase tracking-[0.12em] text-neutral-500">
                 Docentes con más anotaciones
               </p>
             </div>

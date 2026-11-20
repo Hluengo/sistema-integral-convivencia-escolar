@@ -340,7 +340,7 @@ export default function EditCausaModalForm({
             type="button"
             onClick={onClose}
             aria-label="Cerrar editor"
-            className="flex min-h-9 min-w-9 shrink-0 items-center justify-center rounded-lg p-1.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+            className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
           >
             <X className="h-5 w-5" aria-hidden="true" />
           </button>
@@ -405,7 +405,7 @@ export default function EditCausaModalForm({
               htmlFor="edit-tipo-infraccion"
               labelAction={
                 <span
-                  className={`shrink-0 rounded border px-1.5 py-px font-bold text-[10px] uppercase tracking-wider ${severityBadgeClass(tipoInfraccionValue)}`}
+                  className={`shrink-0 rounded border px-1.5 py-px font-bold text-11px uppercase tracking-wider ${severityBadgeClass(tipoInfraccionValue)}`}
                 >
                   {severityLabel(tipoInfraccionValue)}
                 </span>
@@ -508,7 +508,7 @@ export default function EditCausaModalForm({
                   aria-label="Observaciones"
                   value={field.value}
                   onChange={field.onChange}
-                  className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2 font-medium text-neutral-700 text-[13px] outline-none transition-colors placeholder:text-neutral-400 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/30"
+                  className="mt-1.5 w-full rounded-lg border border-neutral-200 bg-neutral-50 p-2 font-medium text-neutral-700 text-13px outline-none transition-colors placeholder:text-neutral-500 focus:border-brand-500 focus:bg-white focus:ring-2 focus:ring-brand-500/30"
                   rows={3}
                   placeholder="Descripción de los hechos, contexto, etc."
                 />

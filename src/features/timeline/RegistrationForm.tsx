@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { useState } from "react";
 import type React from "react";
 import type { ChecklistItem } from "../../shared/lib/types";
-import { Upload, Check } from "lucide-react";
+import { Upload, Check, Copy } from "lucide-react";
 import Button from "../../shared/ui/Button";
 import {
   DOCUMENT_UPLOAD_ACCEPT,
@@ -53,15 +54,37 @@ export default function RegistrationForm({
   errorMessage,
 }: RegistrationFormProps) {
   const isEditing = mode === "edit";
+  const isManualClosureNotice = item.id === "chk_seg_5";
+  const [copied, setCopied] = useState(false);
   const { causa, documentScope, setDocumentScope } = useTimelineContext();
 
   return (
     <div className="mt-3 space-y-4 rounded-xl border border-info-200 bg-white p-4 text-left shadow-sm">
       <div className="flex items-center justify-between border-neutral-100 border-b pb-1.5">
         <span className="font-semibold text-neutral-800 text-xs">
-          {isEditing ? "Rectificación oficial" : "Registro oficial"}
+          {isManualClosureNotice
+            ? "Confirmar que la comunicación ya fue enviada"
+            : isEditing
+              ? "Rectificación oficial"
+              : "Registro oficial"}
         </span>
       </div>
+
+      {isManualClosureNotice && (
+        <div
+          role="status"
+          className="rounded-xl border border-grave-300 bg-grave-50 p-3 text-grave-900"
+        >
+          <p className="font-bold text-sm">
+            Este paso no envía el correo automáticamente.
+          </p>
+          <ol className="mt-2 list-decimal space-y-1 pl-5 text-xs">
+            <li>Copia el texto base que aparece en Observaciones.</li>
+            <li>Envíalo manualmente al apoderado denunciante.</li>
+            <li>Vuelve aquí y confirma que ya fue enviado.</li>
+          </ol>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,0.8fr)_10rem_minmax(0,1.25fr)]">
         <div>
@@ -79,6 +102,7 @@ export default function RegistrationForm({
             value={regName}
             onChange={(e) => setRegName(e.target.value)}
             aria-label="Nombre del responsable"
+            required={isManualClosureNotice}
           />
         </div>
 
@@ -136,7 +160,7 @@ export default function RegistrationForm({
               onChange={(event) => setRegText(event.target.value)}
               rows={4}
               placeholder="Pega aquí el contenido de la evidencia..."
-              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-800 text-xs placeholder:text-neutral-400 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+              className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-2 font-medium text-neutral-800 text-xs placeholder:text-neutral-500 focus:border-brand-500 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
             />
           </label>
         </div>
@@ -147,7 +171,9 @@ export default function RegistrationForm({
           htmlFor={`reg-obs-${item.id}`}
           className="block font-semibold text-neutral-700 text-xs"
         >
-          Observaciones:
+          {isManualClosureNotice
+            ? "Texto base del correo al apoderado denunciante:"
+            : "Observaciones:"}
         </label>
         <textarea
           id={`reg-obs-${item.id}`}
@@ -158,11 +184,25 @@ export default function RegistrationForm({
           rows={3}
           className="mt-1 w-full rounded-lg border border-neutral-300 bg-white p-1.5 font-medium text-neutral-800 text-xs placeholder-neutral-400 transition-colors focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
         />
+        {isManualClosureNotice && (
+          <button
+            type="button"
+            className="mt-2 inline-flex min-h-10 items-center gap-1.5 rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 font-semibold text-brand-700 text-xs hover:bg-brand-100"
+            onClick={() => {
+              void navigator.clipboard
+                ?.writeText(regObservations)
+                .then(() => setCopied(true));
+            }}
+          >
+            <Copy className="size-3.5" aria-hidden="true" />
+            {copied ? "Correo copiado" : "Copiar correo"}
+          </button>
+        )}
       </div>
 
       {causa.incidenteId && (
         <fieldset className="rounded-lg border border-brand-200 bg-brand-50/50 p-2.5">
-          <legend className="font-semibold text-9px text-brand-800 uppercase">
+          <legend className="font-semibold text-11px text-brand-800 uppercase">
             Visibilidad del hito
           </legend>
           <label
@@ -190,15 +230,17 @@ export default function RegistrationForm({
       {errorMessage && (
         <p
           role="alert"
-          className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-10px text-gravisima-700"
+          className="rounded-lg border border-gravisima-200 bg-gravisima-50 p-2 text-11px text-gravisima-700"
         >
           {errorMessage}
         </p>
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-neutral-100 border-t pt-3">
-        <span className="text-10px text-neutral-500">
-          El registro se incorporará a la bitácora del expediente.
+        <span className="text-11px text-neutral-500">
+          {isManualClosureNotice
+            ? "Solo se registrará la confirmación; el sistema no enviará el correo."
+            : "El registro se incorporará a la bitácora del expediente."}
         </span>
         <div className="flex justify-end gap-2">
           <Button
@@ -223,9 +265,11 @@ export default function RegistrationForm({
                   ? regFile
                     ? "Adjuntar y rectificar"
                     : "Guardar rectificación"
-                  : regFile
-                    ? "Adjuntar y registrar"
-                    : "Confirmar registro"}
+                  : isManualClosureNotice
+                    ? "Confirmar que ya fue enviado"
+                    : regFile
+                      ? "Adjuntar y registrar"
+                      : "Confirmar registro"}
               </>
             )}
           </Button>

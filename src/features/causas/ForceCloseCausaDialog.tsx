@@ -176,12 +176,13 @@ export default function ForceCloseCausaDialog({
                 className="size-5 text-gravisima-600"
                 aria-hidden="true"
               />
-              Cerrar causa con fundamento
+              Cierre excepcional con fundamento
             </DialogTitle>
             <DialogDescription className="mt-1">
               El expediente {causa.id} pasará a cerrado. Sus hitos, documentos e
               investigación se conservarán y este cierre quedará registrado en
-              Historial.
+              Historial. Use esta opción solo si no puede completar el flujo
+              normal.
             </DialogDescription>
           </div>
         </DialogHeader>

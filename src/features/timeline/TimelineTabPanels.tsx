@@ -20,7 +20,7 @@ interface TimelineTabPanelsProps {
   breaches: string[];
   selectedPhase: FaseProcedimental | null;
   onSelectPhase: (phase: FaseProcedimental | null) => void;
-  onRegisterHito: () => void;
+  onRegisterHito: (phase?: FaseProcedimental) => void;
 }
 
 export default function TimelineTabPanels({
@@ -36,7 +36,7 @@ export default function TimelineTabPanels({
   return (
     <DetailModalBody
       activeTabId={activeTab}
-      className="space-y-3 bg-[#F8FAFC] p-3 sm:p-4"
+      className="space-y-3 bg-surface-sunken p-3 sm:p-4"
     >
       {activeTab === "resumen" && (
         <ResumenTab
@@ -87,7 +87,7 @@ export default function TimelineTabPanels({
               type="button"
               disabled
               title="La descarga ZIP se habilitará al integrar el visor documental"
-              className="mt-3 flex min-h-10 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-neutral-400 text-xs font-semibold"
+              className="mt-3 flex min-h-10 w-full cursor-not-allowed items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-neutral-500 text-xs font-semibold"
             >
               <Download className="size-4" aria-hidden="true" />
               Descargar expediente ZIP

@@ -396,19 +396,19 @@ export default function DashboardTrendsPanel({
             <caption>Tendencias mensuales de los últimos 6 meses</caption>
             <thead>
               <tr>
-                <th>Mes</th>
-                <th>Observado</th>
-                <th>Aperturas</th>
-                <th>Cierres</th>
-                <th>Brecha</th>
-                <th>Tasa de cierre</th>
-                <th>Alta gravedad</th>
-                <th>Anotaciones</th>
-                <th>Anotaciones positivas</th>
-                <th>Anotaciones negativas</th>
-                <th>Anotaciones de alta gravedad</th>
-                <th>Porcentaje negativas</th>
-                <th>Porcentaje positivas</th>
+                <th scope="col">Mes</th>
+                <th scope="col">Observado</th>
+                <th scope="col">Aperturas</th>
+                <th scope="col">Cierres</th>
+                <th scope="col">Brecha</th>
+                <th scope="col">Tasa de cierre</th>
+                <th scope="col">Alta gravedad</th>
+                <th scope="col">Anotaciones</th>
+                <th scope="col">Anotaciones positivas</th>
+                <th scope="col">Anotaciones negativas</th>
+                <th scope="col">Anotaciones de alta gravedad</th>
+                <th scope="col">Porcentaje negativas</th>
+                <th scope="col">Porcentaje positivas</th>
               </tr>
             </thead>
             <tbody>

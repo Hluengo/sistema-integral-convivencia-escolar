@@ -4,7 +4,12 @@ import type {
   HechoEvidenciaRow,
   HechoRow,
 } from "../../api/services/hechos.service";
-import type { Causa, ReconsideracionRecord, SeguimientoRecord } from "../types";
+import {
+  EstadoCausa,
+  type Causa,
+  type ReconsideracionRecord,
+  type SeguimientoRecord,
+} from "../types";
 
 export interface TransitionDecision {
   allowed: boolean;
@@ -46,6 +51,33 @@ const decision = (blockers: string[]): TransitionDecision => ({
       : blockers[0],
   blockers,
 });
+
+const CLOSURE_COMMUNICATION_STATES = new Set<EstadoCausa>([
+  EstadoCausa.RESOLUCION_EJECUTORIADA,
+  EstadoCausa.MEDIDA_EJECUCION,
+  EstadoCausa.PROCESO_SEGUIMIENTO,
+  EstadoCausa.SEGUIMIENTO_FINALIZADO,
+  EstadoCausa.CAUSA_CERRADA,
+]);
+
+export function canSendClosureCommunication(causa: Causa): TransitionDecision {
+  const blockers: string[] = [];
+  const appealResolved = done(causa, "chk_imp_4");
+  const deadlineExpired = done(causa, "chk_imp_6");
+  if (
+    !CLOSURE_COMMUNICATION_STATES.has(causa.estadoActual) &&
+    !appealResolved &&
+    !deadlineExpired
+  ) {
+    blockers.push(
+      "La comunicación se habilita después de resolver la apelación o registrar el vencimiento del plazo.",
+    );
+  }
+  if (!done(causa, "chk_imp_7")) {
+    blockers.push("Falta notificar la decisión definitiva.");
+  }
+  return decision([...new Set(blockers)]);
+}
 
 const factsAreConcluded = (hechos: HechoRow[]) =>
   hechos.length > 0 && hechos.every((hecho) => hecho.estado !== "denunciado");
@@ -180,6 +212,11 @@ export function canCloseCase(
       causa,
       "chk_seg_4",
       "Falta registrar el cierre de la causa.",
+    ),
+    ...requiredIfPresent(
+      causa,
+      "chk_seg_5",
+      "Falta registrar el envío de la comunicación de cierre.",
     ),
   ];
   if (reconsideraciones?.some((record) => record.estado === "pendiente")) {

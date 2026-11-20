@@ -343,7 +343,7 @@ export default function LoginPage({
                   type="email"
                   placeholder="usuario@colegio.cl"
                   autoComplete="email"
-                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+                  className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 text-neutral-900 text-sm placeholder-neutral-500 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
                   name={emailRegistration.name}
                   onBlur={emailRegistration.onBlur}
                   onChange={emailRegistration.onChange}
@@ -502,7 +502,7 @@ function PasswordInput({
           type={visible ? "text" : "password"}
           placeholder="••••••••"
           autoComplete={autoComplete}
-          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-400 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
+          className="w-full rounded-xl border border-neutral-200 bg-neutral-50 px-4 py-3 pr-11 text-neutral-900 text-sm placeholder-neutral-500 transition-colors duration-200 focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-500/15"
           {...registration}
         />
         <button

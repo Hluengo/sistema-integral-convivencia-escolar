@@ -38,7 +38,7 @@ export default function TeacherAnnotationRanking({
           <div className="min-w-0">
             <h3
               id="teacher-annotation-ranking-title"
-              className="font-bold text-neutral-900 text-[13px]"
+              className="font-bold text-neutral-900 text-13px"
             >
               Panorama docente
             </h3>

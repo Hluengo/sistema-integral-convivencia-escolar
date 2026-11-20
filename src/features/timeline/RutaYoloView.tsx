@@ -1,7 +1,7 @@
 /** @license SPDX-License-Identifier: Apache-2.0 */
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, FileText, Upload } from "lucide-react";
+import { AlertTriangle, Download, FileText, Upload } from "lucide-react";
 import type {
   Causa,
   ChecklistItem,
@@ -9,6 +9,8 @@ import type {
 } from "../../shared/lib/types";
 import { getCausaOperationalSummary } from "../causas/causaOperationalSummary";
 import { getApplicableChecklistItems } from "../../shared/lib/domain/investigationChecklist";
+import { canSendClosureCommunication } from "../../shared/lib/domain/proceduralTransitions";
+import { CIERRE_COMUNICACION_OBSERVACIONES } from "../../shared/lib/data";
 import { getPhaseTone } from "../../shared/lib/domain/phaseTones";
 import { getDocumentPreviewKind } from "./documentPreviewText";
 import CausaNotificationPanel from "../causas/notificacionDocgen/CausaNotificationPanel";
@@ -96,8 +98,13 @@ export default function RutaYoloView({
     () => getApplicableChecklistItems(causa, activePhase),
     [activePhase, causa],
   );
+  const closureCommunicationItem = causa.checklistDebidoProceso.find(
+    (item) => item.id === "chk_seg_5",
+  );
   const selectedItem =
-    phaseItems.find((item) => item.id === selectedItemId) ?? null;
+    (selectedItemId === "chk_seg_5"
+      ? closureCommunicationItem
+      : phaseItems.find((item) => item.id === selectedItemId)) ?? null;
   const evidenceEntries = useMemo(
     () =>
       selectedItem?.id === "chk_inv_2"
@@ -113,6 +120,7 @@ export default function RutaYoloView({
     [causa.bitacora, selectedItem?.id, selectedItem?.label],
   );
   const isNotification = selectedItem?.id === "chk_rec_3";
+  const closureCommunicationDecision = canSendClosureCommunication(causa);
   const isEditing = selectedItem
     ? registeringItemId === selectedItem.id
     : false;
@@ -123,11 +131,30 @@ export default function RutaYoloView({
 
   useEffect(() => {
     setSelectedItemId((current) =>
-      current && phaseItems.some((item) => item.id === current)
+      current === "chk_seg_5" && closureCommunicationItem
         ? current
-        : defaultItem(phaseItems),
+        : current && phaseItems.some((item) => item.id === current)
+          ? current
+          : defaultItem(phaseItems),
     );
-  }, [phaseItems]);
+  }, [closureCommunicationItem, phaseItems]);
+
+  useEffect(() => {
+    if (selectedItem?.id !== "chk_seg_5" || selectedItem.completado) return;
+    setRegObservations(
+      (current) =>
+        current ||
+        CIERRE_COMUNICACION_OBSERVACIONES.replaceAll(
+          "[N.° de expediente]",
+          causa.id,
+        ),
+    );
+  }, [
+    causa.id,
+    selectedItem?.completado,
+    selectedItem?.id,
+    setRegObservations,
+  ]);
 
   useEffect(() => {
     let cancelled = false;
@@ -205,6 +232,70 @@ export default function RutaYoloView({
           })}
         </div>
       </div>
+      {closureCommunicationItem && (
+        <section
+          className={`card flex flex-wrap items-center justify-between gap-3 border-2 px-4 py-3 ${
+            closureCommunicationItem.completado
+              ? "border-secondary-200 bg-secondary-50"
+              : "border-grave-300 bg-grave-50 shadow-md"
+          }`}
+        >
+          <div className="flex min-w-0 items-start gap-3">
+            <AlertTriangle
+              className={`mt-0.5 size-5 shrink-0 ${
+                closureCommunicationItem.completado
+                  ? "text-secondary-600"
+                  : "text-grave-600"
+              }`}
+              aria-hidden="true"
+            />
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <p
+                  className={`font-bold text-sm ${
+                    closureCommunicationItem.completado
+                      ? "text-secondary-800"
+                      : "text-grave-900"
+                  }`}
+                >
+                  Enviar comunicación de cierre al apoderado denunciante
+                </p>
+                {!closureCommunicationItem.completado && (
+                  <span className="rounded-full bg-grave-600 px-2 py-0.5 font-bold text-11px text-white">
+                    Acción requerida
+                  </span>
+                )}
+              </div>
+              <p
+                className={`mt-0.5 text-xs ${
+                  closureCommunicationItem.completado
+                    ? "text-secondary-700"
+                    : "text-grave-800"
+                }`}
+              >
+                {closureCommunicationItem.completado
+                  ? "Envío manual registrado en la bitácora."
+                  : closureCommunicationDecision.allowed
+                    ? "Copie el texto, envíelo desde su correo institucional y vuelva aquí para confirmar el envío."
+                    : "Se habilitará después de notificar la decisión definitiva y resolver la apelación."}
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSelectedItemId("chk_seg_5")}
+            className={`inline-flex min-h-10 items-center rounded-lg px-3 py-2 font-semibold text-white text-xs ${
+              closureCommunicationItem.completado
+                ? "bg-secondary-500 hover:bg-secondary-600"
+                : "bg-grave-600 hover:bg-grave-700"
+            }`}
+          >
+            {closureCommunicationItem.completado
+              ? "Ver registro"
+              : "Ver instrucciones"}
+          </button>
+        </section>
+      )}
       <div className="card grid min-h-0 grid-cols-1 overflow-hidden lg:grid-cols-[400px_minmax(0,1fr)]">
         <RutaYoloPhaseRail
           causa={causa}
@@ -276,7 +367,9 @@ export default function RutaYoloView({
               {selectedItem &&
                 !isNotification &&
                 (isEditing || !selectedItem.completado) &&
-                currentRole !== "docente" && (
+                currentRole !== "docente" &&
+                (selectedItem.id !== "chk_seg_5" ||
+                  closureCommunicationDecision.allowed) && (
                   <RegistrationForm
                     item={selectedItem}
                     mode={selectedItem.completado ? "edit" : "register"}
@@ -298,6 +391,22 @@ export default function RutaYoloView({
                     isSaving={isSavingRegistration}
                     errorMessage={registrationError}
                   />
+                )}
+
+              {selectedItem?.id === "chk_seg_5" &&
+                !selectedItem.completado &&
+                !closureCommunicationDecision.allowed && (
+                  <div
+                    role="alert"
+                    className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900"
+                  >
+                    <p className="font-semibold">
+                      Comunicación aún no habilitada
+                    </p>
+                    <p className="mt-1 text-xs">
+                      {closureCommunicationDecision.reason}
+                    </p>
+                  </div>
                 )}
 
               {selectedItem &&

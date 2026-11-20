@@ -359,27 +359,27 @@ export default memo(function AnotacionesStudentTable({
           <table className="min-w-full">
             <thead className="border-b border-neutral-200/60 bg-neutral-50">
               <tr aria-label="Estado de carga de estudiantes">
-                <th className="px-4 py-3 text-left font-semibold text-neutral-700 text-xs">
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-neutral-700 text-xs">
                   Estudiante
                 </th>
 
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs md:table-cell">
+                <th scope="col" className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs md:table-cell">
                   Curso
                 </th>
 
-                <th className="px-4 py-3 text-center font-semibold text-neutral-700 text-xs">
+                <th scope="col" className="px-4 py-3 text-center font-semibold text-neutral-700 text-xs">
                   Positivas
                 </th>
-                <th className="px-4 py-3 text-center font-semibold text-neutral-700 text-xs">
+                <th scope="col" className="px-4 py-3 text-center font-semibold text-neutral-700 text-xs">
                   Negativas
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs lg:table-cell">
+                <th scope="col" className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs lg:table-cell">
                   Último Registro
                 </th>
-                <th className="px-4 py-3 text-left font-semibold text-neutral-700 text-xs">
+                <th scope="col" className="px-4 py-3 text-left font-semibold text-neutral-700 text-xs">
                   Estado
                 </th>
-                <th className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs md:table-cell">
+                <th scope="col" className="hidden px-4 py-3 text-left font-semibold text-neutral-700 text-xs md:table-cell">
                   Estado de cartas
                 </th>
               </tr>
@@ -462,7 +462,7 @@ export default memo(function AnotacionesStudentTable({
                         </span>
                         {student.ai_analysis &&
                           student.ai_analysis.positivas > 0 && (
-                            <span className="ml-1 inline-flex items-center rounded-full bg-brand-100 px-1.5 py-0.5 font-semibold text-10px text-brand-800">
+                            <span className="ml-1 inline-flex items-center rounded-full bg-brand-100 px-1.5 py-0.5 font-semibold text-11px text-brand-800">
                               +{student.ai_analysis.positivas}
                             </span>
                           )}
@@ -476,7 +476,7 @@ export default memo(function AnotacionesStudentTable({
                         {student.ai_analysis &&
                           student.ai_analysis.negativas > negativeCount && (
                             <span
-                              className="ml-1 inline-flex items-center rounded-full bg-brand-50 px-1.5 py-0.5 font-semibold text-10px text-brand-600"
+                              className="ml-1 inline-flex items-center rounded-full bg-brand-50 px-1.5 py-0.5 font-semibold text-11px text-brand-600"
                               title={`${negativeCount} registradas + ${student.ai_analysis.negativas} IA`}
                             >
                               IA
@@ -506,7 +506,7 @@ export default memo(function AnotacionesStudentTable({
                         {(() => {
                           const statuses = cartaStatuses[student.id];
                           if (!statuses || statuses.length === 0) {
-                            return <span className="text-neutral-400">—</span>;
+                            return <span className="text-neutral-500">—</span>;
                           }
                           const sorted = [...statuses].sort((a, b) => {
                             if (a === "Pendiente") return -1;
@@ -525,7 +525,7 @@ export default memo(function AnotacionesStudentTable({
                                 return (
                                   <span
                                     key={s}
-                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-10px ${badge.bg} ${badge.textClass}`}
+                                    className={`inline-flex items-center rounded-full px-2 py-0.5 font-medium text-11px ${badge.bg} ${badge.textClass}`}
                                   >
                                     {s}
                                   </span>

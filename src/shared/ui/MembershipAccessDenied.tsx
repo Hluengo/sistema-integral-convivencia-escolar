@@ -35,13 +35,13 @@ export function MembershipAccessDenied({
             "Su cuenta no tiene una membresía activa para esta aplicación."}
         </p>
         {authMode === "enforced" && (
-          <p className="text-grave-600 text-xs">
+          <p className="text-grave-700 text-xs">
             Modo restringido — solo usuarios con membresía activa pueden
             acceder.
           </p>
         )}
         {authMode === "transition" && legacyFallbackUsed && (
-          <p className="text-grave-600 text-xs">
+          <p className="text-grave-700 text-xs">
             Modo transición — se intentó usar credenciales heredadas pero no fue
             suficiente.
           </p>

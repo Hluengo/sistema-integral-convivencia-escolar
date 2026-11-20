@@ -202,7 +202,7 @@ export default function CommandPalette({
             aria-controls="cmd-listbox"
             aria-activedescendant={activeDescendantId}
           />
-          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-10px text-neutral-500 sm:inline-flex">
+          <kbd className="hidden items-center gap-0.5 rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 font-mono text-11px text-neutral-500 sm:inline-flex">
             ESC
           </kbd>
         </div>
@@ -250,7 +250,7 @@ export default function CommandPalette({
                     </p>
                   )}
                 </div>
-                <span className="shrink-0 font-medium text-10px text-neutral-500">
+                <span className="shrink-0 font-medium text-11px text-neutral-500">
                   {item.category}
                 </span>
               </div>
@@ -258,7 +258,7 @@ export default function CommandPalette({
           )}
         </div>
 
-        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-10px text-neutral-500">
+        <div className="flex items-center gap-4 border-t border-neutral-100 px-4 py-2 text-11px text-neutral-500">
           <span className="flex items-center gap-1">
             <kbd className="rounded border border-neutral-200 bg-neutral-100 px-1 py-0.5 font-mono">
               ↑↓

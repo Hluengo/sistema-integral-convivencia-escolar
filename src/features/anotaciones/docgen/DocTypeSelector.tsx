@@ -83,7 +83,7 @@ export default function DocTypeSelector({
                 {!enabled ? (
                   <Lock className="h-3.5 w-3.5 text-neutral-400" />
                 ) : isActive ? (
-                  <span className="rounded bg-brand-600 px-1.5 py-0.5 font-bold text-white text-[10px]">
+                  <span className="rounded bg-brand-600 px-1.5 py-0.5 font-bold text-white text-11px">
                     Activo
                   </span>
                 ) : null}
@@ -96,11 +96,11 @@ export default function DocTypeSelector({
               >
                 {label}
               </span>
-              <span className="mt-0.5 block text-neutral-500 text-[11px] leading-tight">
+              <span className="mt-0.5 block text-neutral-500 text-11px leading-tight">
                 {description}
               </span>
               {!enabled && id === "compromiso_conductual" && (
-                <span className="mt-1 block font-semibold text-grave-600 text-xs">
+                <span className="mt-1 block font-semibold text-grave-700 text-xs">
                   Faltan {10 - negativeCount} anotaciones
                 </span>
               )}

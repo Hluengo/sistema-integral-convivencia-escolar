@@ -58,4 +58,21 @@ describe("buildNotifications", () => {
       [],
     );
   });
+
+  it("alerta la comunicación de cierre después de la resolución ejecutoriada", () => {
+    const causa = {
+      ...baseCausa(),
+      estadoActual: EstadoCausa.RESOLUCION_EJECUTORIADA,
+      checklistDebidoProceso: [
+        { id: "chk_imp_7", completado: true },
+        { id: "chk_seg_5", completado: false },
+      ] as Causa["checklistDebidoProceso"],
+    };
+
+    const notification = buildNotifications([causa]).find(
+      (item) => item.id === "DC-2026-001:cierre-comunicacion",
+    );
+    assert.equal(notification?.urgent, true);
+    assert.match(notification?.description ?? "", /apoderado denunciante/);
+  });
 });

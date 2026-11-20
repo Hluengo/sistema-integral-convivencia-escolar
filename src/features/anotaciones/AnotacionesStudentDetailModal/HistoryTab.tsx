@@ -384,7 +384,7 @@ export default function HistoryTab({
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar por palabra clave..."
               aria-label="Buscar en el historial por palabra clave"
-              className="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-1.5 pr-3 pl-8 text-xs text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-1 focus:ring-sky-500"
+              className="w-full rounded-lg border border-neutral-200 bg-neutral-50 py-1.5 pr-3 pl-8 text-xs text-neutral-700 placeholder:text-neutral-500 focus:outline-none focus:ring-1 focus:ring-sky-500"
             />
           </div>
         </div>
@@ -474,7 +474,7 @@ export default function HistoryTab({
                         <div className="mb-2 flex flex-col justify-between gap-2 sm:flex-row sm:items-center">
                           <div className="flex flex-wrap items-center gap-2">
                             <span
-                              className={`rounded border px-2 py-0.5 font-semibold text-[11px] ${badge.badgeClass}`}
+                              className={`rounded border px-2 py-0.5 font-semibold text-11px ${badge.badgeClass}`}
                             >
                               {badge.label}
                             </span>
@@ -496,7 +496,7 @@ export default function HistoryTab({
               </div>
             </div>
           ))}
-          <p className="flex items-center justify-center gap-2 pt-2 pb-4 text-center text-xs text-neutral-400">
+          <p className="flex items-center justify-center gap-2 pt-2 pb-4 text-center text-xs text-neutral-500">
             <CheckCircle2
               className="h-3.5 w-3.5 text-neutral-300"
               aria-hidden="true"

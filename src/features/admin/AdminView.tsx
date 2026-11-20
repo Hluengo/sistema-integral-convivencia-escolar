@@ -435,11 +435,11 @@ export default function AdminView() {
               <table className="w-full min-w-[900px] text-left text-sm">
                 <thead className="bg-neutral-50 text-neutral-600 text-xs uppercase">
                   <tr>
-                    <th className="px-5 py-3">Usuario</th>
-                    <th className="px-5 py-3">Rol</th>
-                    <th className="px-5 py-3">Estado</th>
-                    <th className="px-5 py-3">Último acceso</th>
-                    <th className="px-5 py-3 text-right">Acción</th>
+                    <th scope="col" className="px-5 py-3">Usuario</th>
+                    <th scope="col" className="px-5 py-3">Rol</th>
+                    <th scope="col" className="px-5 py-3">Estado</th>
+                    <th scope="col" className="px-5 py-3">Último acceso</th>
+                    <th scope="col" className="px-5 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">

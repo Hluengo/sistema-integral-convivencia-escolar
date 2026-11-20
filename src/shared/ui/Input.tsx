@@ -12,7 +12,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     <input
       ref={ref}
       aria-invalid={invalid || props["aria-invalid"]}
-      className={`w-full rounded-lg border bg-white text-neutral-800 outline-none transition-colors placeholder:text-neutral-400 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500 ${compact ? "px-2.5 py-1.5 text-[13px]" : "px-3 py-2.5 text-sm"} ${
+      className={`w-full rounded-lg border bg-white text-neutral-800 outline-none transition-colors placeholder:text-neutral-500 disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-500 ${compact ? "px-2.5 py-1.5 text-13px" : "px-3 py-2.5 text-sm"} ${
         invalid
           ? "border-gravisima-300 focus:border-gravisima-500 focus:ring-2 focus:ring-gravisima-500/20"
           : "border-neutral-200 focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"

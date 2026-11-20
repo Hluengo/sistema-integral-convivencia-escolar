@@ -20,6 +20,7 @@ import {
   resolveDocumentOwnerId,
   uploadDocument,
 } from "../../api/services/storage.service";
+import { CIERRE_COMUNICACION_OBSERVACIONES } from "../data";
 
 const checklistRegistrationDraftSchema = z
   .object({
@@ -140,7 +141,13 @@ export function useChecklistRegistration({
       setRegistrationError(null);
       setRegisteringItemId(item.id);
       setRegName(item.registradoPor || getResponsableName());
-      setRegObservations(item.observaciones || "");
+      const defaultObservations =
+        item.id === "chk_seg_5"
+          ? CIERRE_COMUNICACION_OBSERVACIONES
+          : item.observaciones || "";
+      setRegObservations(
+        defaultObservations.replaceAll("[N.° de expediente]", causa.id),
+      );
       setRegFileName("");
       setRegFile(null);
       setRegText("");
@@ -183,6 +190,12 @@ export function useChecklistRegistration({
         const targetItem = causa.checklistDebidoProceso.find(
           (item) => item.id === itemId,
         );
+        if (itemId === "chk_seg_5" && !regName.trim()) {
+          setRegistrationError(
+            "Ingrese el responsable que realizó el envío manual.",
+          );
+          return;
+        }
         const itemLabel = targetItem
           ? targetItem.label
           : "Paso de Debido Proceso";

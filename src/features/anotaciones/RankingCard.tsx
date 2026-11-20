@@ -75,7 +75,7 @@ export default function RankingCard({
           <div className="flex size-6 items-center justify-center rounded-md bg-brand-50">
             <Icon className="size-3.5 text-brand-600" aria-hidden="true" />
           </div>
-          <h3 id={titleId} className="font-bold text-neutral-900 text-[13px]">
+          <h3 id={titleId} className="font-bold text-neutral-900 text-13px">
             {title}
           </h3>
         </div>

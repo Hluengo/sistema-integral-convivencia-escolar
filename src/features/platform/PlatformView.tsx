@@ -423,11 +423,11 @@ export default function PlatformView() {
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead className="bg-neutral-50 text-neutral-600 text-xs uppercase">
                   <tr>
-                    <th className="px-5 py-3">Nombre</th>
-                    <th className="px-5 py-3">Slug</th>
-                    <th className="px-5 py-3">Usuarios</th>
-                    <th className="px-5 py-3">Creado</th>
-                    <th className="px-5 py-3 text-right">Acción</th>
+                    <th scope="col" className="px-5 py-3">Nombre</th>
+                    <th scope="col" className="px-5 py-3">Slug</th>
+                    <th scope="col" className="px-5 py-3">Usuarios</th>
+                    <th scope="col" className="px-5 py-3">Creado</th>
+                    <th scope="col" className="px-5 py-3 text-right">Acción</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-neutral-100">

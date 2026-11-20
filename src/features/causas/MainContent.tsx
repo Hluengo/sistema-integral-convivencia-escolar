@@ -88,7 +88,7 @@ export default function MainContent({
     <main
       id="main-content"
       tabIndex={-1}
-      className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col bg-[#faf8ff] px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
+      className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col bg-surface px-4 py-6 outline-none sm:px-6 sm:py-8 lg:px-8"
     >
       <div className="sr-only" aria-live="polite" aria-atomic="true">
         {currentView === "dashboard" && "Vista: Panel de control"}

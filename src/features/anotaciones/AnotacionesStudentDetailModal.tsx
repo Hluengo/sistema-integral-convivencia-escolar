@@ -297,7 +297,7 @@ export default function AnotacionesStudentDetailModal({
                 aria-label="Cerrar ficha disciplinaria"
                 title="Cerrar ficha"
                 onClick={onClose}
-                className="min-h-10 min-w-10 rounded-lg p-2 text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-neutral-600 transition-colors hover:bg-neutral-100 hover:text-neutral-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2"
               >
                 <X className="size-4" />
               </button>

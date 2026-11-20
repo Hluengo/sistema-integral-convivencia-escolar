@@ -6,6 +6,7 @@ import {
   remainingProcedureDays,
   daysElapsedCeil,
 } from "../../../shared/lib/dateUtils";
+import { canSendClosureCommunication } from "../domain/proceduralTransitions";
 
 export interface Notification {
   id: string;
@@ -43,6 +44,26 @@ export function buildNotifications(
   const notifications: Notification[] = [];
 
   causas.forEach((causa) => {
+    const closureCommunication = causa.checklistDebidoProceso.find(
+      (item) => item.id === "chk_seg_5",
+    );
+    if (
+      closureCommunication &&
+      !closureCommunication.completado &&
+      canSendClosureCommunication(causa).allowed
+    ) {
+      notifications.push({
+        id: `${causa.id}:cierre-comunicacion`,
+        title: "Comunicación de cierre pendiente",
+        description: `Debe enviar manualmente la comunicación al apoderado denunciante del expediente ${causa.id}.`,
+        time: "Requiere atención",
+        urgent: true,
+        priority: 0,
+        causaId: causa.id,
+        notificationType: "closure_communication",
+        actionUrl: `/causas/${encodeURIComponent(causa.id)}`,
+      });
+    }
     if (
       causa.comprometeAulaSegura &&
       causa.estadoActual !== EstadoCausa.CAUSA_CERRADA &&

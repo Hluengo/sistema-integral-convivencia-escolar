@@ -117,7 +117,7 @@ export default function OnboardingChecklist({
             updateState({ ...state, dismissed: true });
             setExpanded(false);
           }}
-          className="self-end rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-white hover:text-neutral-700 sm:self-start"
+          className="inline-flex min-h-11 min-w-11 items-center justify-center self-end rounded-lg text-neutral-500 transition-colors hover:bg-white hover:text-neutral-700 sm:self-start"
           aria-label="Ocultar inicio guiado"
         >
           <X className="size-4" aria-hidden="true" />
