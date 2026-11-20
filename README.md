@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/logo.svg" alt="Identidad de Gestión de Casos" width="120" />
+  <img src="docs/screenshots/praxia-novus.jpg" alt="Logo de Praxia Novus" width="240" />
 
 # Gestión de Casos
 
