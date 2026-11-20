@@ -1,22 +1,24 @@
 -- Bootstrap consolidado de Supabase para una instalación NUEVA de Sistema Integral de Convivencia Escolar.
 -- Generado desde master el 2026-11-20.
 -- Incluye el baseline actual y las 92 migraciones activas posteriores, en orden de versión.
--- No incluye supabase/migrations-legacy/ ni supabase/seed.sql: el primero es historial archivado;
--- el segundo crea usuarios de demostración, contraseñas conocidas y datos ficticios.
+-- Excluye supabase/migrations-legacy/, el seed local con cuentas/datos ficticios y la tabla
+-- coexistence_cases, que no tiene consumidor en el código de la app y se conserva solo en el
+-- baseline del entorno actual por motivos históricos.
 --
 -- USO: ejecutar el archivo completo una sola vez en SQL Editor de un proyecto Supabase recién creado,
 -- como postgres. No ejecutar en el proyecto actual, en producción, ni sobre una base con tablas de la app.
 -- El bloque inicial aborta si detecta tablas centrales existentes. El script no es idempotente.
 --
 -- El SQL crea esquema, funciones, políticas RLS, índices, triggers, configuración de Storage y
--- registra los códigos de aplicación convivencia/inasistencias requeridos por has_app_access().
--- No crea tenants, usuarios Auth ni datos institucionales. Esos datos deben provisionarse después
--- mediante el flujo de alta de la aplicación. No usar supabase/seed.sql en producción.
+-- registra el catálogo de aplicaciones convivencia/inasistencias requerido por has_app_access().
+-- No crea tenants, usuarios Auth ni datos institucionales. Esos datos se provisionan después.
+-- No usar supabase/seed.sql en producción.
 --
--- Si luego se usará Supabase CLI, iniciar el historial de migraciones del NUEVO proyecto desde este
--- snapshot. No aplicar después las 93 migraciones de este repositorio: repetiría los cambios.
+-- Si luego se usará Supabase CLI, iniciar el historial del NUEVO proyecto desde este snapshot.
+-- No aplicar después las 93 migraciones originales: repetiría los cambios.
 --
--- Cada delimitador SOURCE conserva el archivo de origen para facilitar auditorías.
+-- Cada sección indica el archivo de origen. Del baseline se omite solo la tabla legacy indicada;
+-- de la migración de auditoría se omiten sus grants y policy exclusivos para esa tabla.
 
 BEGIN;
 
@@ -1713,31 +1715,6 @@ CREATE TABLE IF NOT EXISTS "public"."checklist_items" (
 ALTER TABLE "public"."checklist_items" OWNER TO "postgres";
 
 
-CREATE TABLE IF NOT EXISTS "public"."coexistence_cases" (
-    "id" "uuid" DEFAULT "gen_random_uuid"() NOT NULL,
-    "folio" "text" NOT NULL,
-    "fecha_inicio" timestamp with time zone DEFAULT "now"(),
-    "titulo" "text" NOT NULL,
-    "descripcion" "text",
-    "denunciante" "text",
-    "denunciado" "text",
-    "curso" "text",
-    "curso_id" "uuid",
-    "gravedad" "text",
-    "etapa" "text" DEFAULT 'inicio'::"text",
-    "plazo_24h" boolean DEFAULT false,
-    "plazo_investigacion" timestamp with time zone,
-    "plazo_cierre" timestamp with time zone,
-    "documentos" "text"[] DEFAULT '{}'::"text"[],
-    "entrevistas" "text"[] DEFAULT '{}'::"text"[],
-    "created_at" timestamp with time zone DEFAULT "now"(),
-    "updated_at" timestamp with time zone DEFAULT "now"(),
-    CONSTRAINT "coexistence_cases_etapa_check" CHECK (("etapa" = ANY (ARRAY['inicio'::"text", 'comunicacion'::"text", 'investigacion'::"text", 'resolucion'::"text", 'reconsideracion'::"text"]))),
-    CONSTRAINT "coexistence_cases_gravedad_check" CHECK (("gravedad" = ANY (ARRAY['leve'::"text", 'grave'::"text", 'muy-grave'::"text"])))
-);
-
-
-ALTER TABLE "public"."coexistence_cases" OWNER TO "postgres";
 
 
 CREATE TABLE IF NOT EXISTS "public"."courses" (
@@ -2262,8 +2239,6 @@ ALTER TABLE ONLY "public"."checklist_items"
 
 
 
-ALTER TABLE ONLY "public"."coexistence_cases"
-    ADD CONSTRAINT "coexistence_cases_pkey" PRIMARY KEY ("id");
 
 
 
@@ -2856,8 +2831,6 @@ ALTER TABLE ONLY "public"."checklist_items"
 
 
 
-ALTER TABLE ONLY "public"."coexistence_cases"
-    ADD CONSTRAINT "coexistence_cases_curso_id_fkey" FOREIGN KEY ("curso_id") REFERENCES "public"."courses"("id");
 
 
 
@@ -3187,7 +3160,6 @@ CREATE POLICY "checklist_tenant_update" ON "public"."checklist_items" FOR UPDATE
 
 
 
-ALTER TABLE "public"."coexistence_cases" ENABLE ROW LEVEL SECURITY;
 
 
 ALTER TABLE "public"."courses" ENABLE ROW LEVEL SECURITY;
@@ -3913,9 +3885,6 @@ GRANT ALL ON TABLE "public"."checklist_items" TO "service_role";
 
 
 
-GRANT ALL ON TABLE "public"."coexistence_cases" TO "anon";
-GRANT ALL ON TABLE "public"."coexistence_cases" TO "authenticated";
-GRANT ALL ON TABLE "public"."coexistence_cases" TO "service_role";
 
 
 
@@ -6299,19 +6268,8 @@ revoke references, trigger, truncate
 -- ser una funcion RPC anonima expuesta en el Data API.
 revoke execute on function public.current_role() from anon;
 
--- Estas tablas legacy no participan en la aplicacion actual. Mantener RLS
--- activo con politicas deny explicitas evita una tabla protegida sin contrato
--- visible y conserva el acceso del service_role para tareas administrativas.
-revoke all on table public.coexistence_cases from anon, authenticated;
+-- Las invitaciones no se exponen a clientes; su gestión ocurre desde el servidor.
 revoke all on table public.membership_invitations from anon, authenticated;
-
-drop policy if exists coexistence_cases_no_client_access on public.coexistence_cases;
-create policy coexistence_cases_no_client_access
-  on public.coexistence_cases
-  for all
-  to anon, authenticated
-  using (false)
-  with check (false);
 
 drop policy if exists membership_invitations_no_client_access on public.membership_invitations;
 create policy membership_invitations_no_client_access
