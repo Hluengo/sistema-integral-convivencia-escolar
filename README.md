@@ -1,165 +1,120 @@
 <div align="center">
-  <img src="./public/logo.svg" alt="Gestión de Casos — Convivencia Escolar" width="150" />
+  <img src="public/logo.svg" alt="Identidad de Gestión de Casos" width="120" />
 
-# Sistema Integral de Convivencia Escolar
+# Gestión de Casos
 
-**Plataforma para gestionar expedientes, anotaciones y el debido proceso de convivencia escolar.**
+### Convivencia escolar con información ordenada y seguimiento claro
 
-  <p>
-    <a href="https://gestiondecasos.vercel.app">🌐 Demo pública</a> ·
-    <a href="#características">Características</a> ·
-    <a href="#arquitectura">Arquitectura</a> ·
-    <a href="#desarrollo-local">Desarrollo local</a>
-  </p>
+Una plataforma para registrar anotaciones, gestionar expedientes, preparar documentos y consultar indicadores en un mismo lugar.
 
-  <p>
-    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI" alt="CI" /></a>
-    <a href="https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/lighthouse.yml"><img src="https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/lighthouse.yml?branch=master&label=Lighthouse" alt="Lighthouse" /></a>
-    <img src="https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white" alt="React 19" />
-    <img src="https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white" alt="TypeScript 5.8" />
-    <img src="https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white" alt="Supabase PostgreSQL" />
-    <img src="https://img.shields.io/badge/tests-1018-brightgreen" alt="1018 tests" />
-  </p>
+[**Conocer la plataforma**](https://gestiondecasos.vercel.app) · [Ver las pantallas](#conoce-la-plataforma) · [Explorar sus funciones](#qué-puedes-hacer) · [Consultar el proyecto](https://github.com/Hluengo/sistema-integral-convivencia-escolar/issues)
+
+[![Estado de CI](https://img.shields.io/github/actions/workflow/status/Hluengo/sistema-integral-convivencia-escolar/ci.yml?branch=master&label=CI)](https://github.com/Hluengo/sistema-integral-convivencia-escolar/actions/workflows/ci.yml)
+![React](https://img.shields.io/badge/React-19-149ECA?logo=react&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL-3ECF8E?logo=supabase&logoColor=white)
+
 </div>
 
-> Proyecto en evolución. Está orientado a equipos de convivencia, inspectoría, dirección y administración de establecimientos educacionales chilenos. No reemplaza la revisión jurídica ni las decisiones institucionales de cada colegio.
+> **Para equipos directivos, convivencia escolar e inspectoría.** El acceso a la plataforma puede requerir credenciales. Su uso debe ajustarse al reglamento interno y a las decisiones del establecimiento.
 
-## Qué resuelve
+## Una vista de todo el proceso
 
-El sistema centraliza el trabajo que normalmente queda repartido entre planillas, documentos y registros aislados:
+El trabajo de convivencia escolar suele distribuirse entre registros, planillas y documentos. Gestión de Casos reúne antecedentes, etapas y acciones para facilitar el seguimiento de cada situación y la coordinación del equipo.
 
-- **Expedientes de convivencia:** fases, estados, bitácora y checklist de debido proceso.
-- **Anotaciones RICE:** clasificación de gravedad, filtros, historial y cartas asociadas.
-- **Documentos:** cartas institucionales imprimibles, trazabilidad y registro de constancias físicas.
-- **Reportes:** indicadores, filtros, tendencias escolares y exportación a Excel.
-- **Administración:** usuarios, roles, cursos, estudiantes, reglas institucionales y configuración del colegio.
-- **Privacidad:** modo de privacidad para enmascarar nombres y RUT en la interfaz.
+```mermaid
+flowchart TD
+    A["Registrar antecedentes"] --> B["Abrir y organizar el expediente"]
+    B --> C["Dar seguimiento a actuaciones y plazos"]
+    C --> D["Preparar documentos y resoluciones"]
+    D --> E["Consultar reportes y cerrar el proceso"]
+```
 
-## Capturas
+La plataforma ayuda a documentar el trabajo; la valoración de los hechos, las medidas y la revisión de su procedencia corresponden al equipo responsable.
 
-Las imágenes usan datos ficticios o anonimizados y fueron tomadas con el modo privacidad activado.
+## Conoce la plataforma
 
-|                       Dashboard                        |                      Expedientes                       |
-| :----------------------------------------------------: | :----------------------------------------------------: |
-| ![Dashboard ejecutivo](docs/screenshots/dashboard.png) | ![Listado de expedientes](docs/screenshots/causas.png) |
+Capturas ilustrativas del producto con el modo de privacidad activado. Las cifras mostradas son parte de esas vistas y no representan resultados de un establecimiento.
 
-|                   Anotaciones RICE                    |                  Centro de reportes                  |
-| :---------------------------------------------------: | :--------------------------------------------------: |
-| ![Anotaciones RICE](docs/screenshots/anotaciones.png) | ![Centro de reportes](docs/screenshots/reportes.png) |
+| Panel de gestión | Expedientes |
+| :---: | :---: |
+| ![Panel con indicadores de causas y anotaciones](docs/screenshots/dashboard.png) | ![Listado de expedientes con etapas y estados](docs/screenshots/causas.png) |
 
-[Ver también el asistente legal](docs/screenshots/asistente-legal.png).
+| Anotaciones | Reportes |
+| :---: | :---: |
+| ![Registro de anotaciones y estado de cartas](docs/screenshots/anotaciones.png) | ![Filtros e indicadores del centro de reportes](docs/screenshots/reportes.png) |
 
-## Seguridad y privacidad
+[Ver la pantalla del asistente legal](docs/screenshots/asistente-legal.png).
 
-El proyecto maneja información potencialmente sensible de estudiantes. Las principales barreras son:
+## Qué puedes hacer
 
-- Aislamiento **multi-tenant** mediante `tenant_id` y políticas RLS de PostgreSQL.
-- Autenticación Supabase y verificación JWT en rutas protegidas.
-- Roles y membresías por establecimiento.
-- `SUPABASE_SERVICE_ROLE_KEY` solo en servidor.
-- Validación y sanitización de entradas antes de persistir o invocar servicios externos.
-- Modo privacidad para reducir la exposición visual de nombres y RUT.
-- Pruebas de aislamiento por tenant con pgTAP.
+| Área | Funciones disponibles |
+| --- | --- |
+| **Expedientes** | Consultar etapas, responsables, bitácora y acciones del procedimiento. |
+| **Anotaciones** | Revisar el historial por estudiante, la clasificación y el estado de cartas asociadas. |
+| **Documentos** | Preparar documentos institucionales e imprimirlos con registro de actuaciones. |
+| **Reportes** | Filtrar información, visualizar indicadores y exportar datos a Excel. |
+| **Administración** | Gestionar usuarios, roles, cursos, estudiantes y configuración institucional. |
+| **Privacidad** | Enmascarar nombres y RUT en pantalla mediante el modo de privacidad. |
 
-Consulta la [documentación de seguridad](docs/architecture/security.md) y la [constitución del proyecto](docs/CONSTITUTION.md). La seguridad técnica no reemplaza controles institucionales, base legal, gestión de accesos ni revisión jurídica.
+### Pensado para el trabajo del establecimiento
 
-## Arquitectura
+- **Seguimiento compartido:** el equipo encuentra las actuaciones y el estado de cada expediente en un lugar común.
+- **Información consultable:** filtros y reportes facilitan la revisión de anotaciones, casos y tendencias.
+- **Configuración por institución:** usuarios, roles y cursos se administran según la organización del colegio.
+
+## Seguridad y tratamiento responsable de datos
+
+La aplicación utiliza autenticación, roles, membresías por establecimiento y políticas de acceso a datos en PostgreSQL (RLS). Las claves privilegiadas se mantienen en el servidor. El modo de privacidad reduce la exposición visual de identificadores durante el uso o una presentación.
+
+Estas medidas técnicas requieren una configuración institucional adecuada, control de accesos y revisión de los documentos antes de comunicarlos. Más detalles en [seguridad y arquitectura](docs/architecture/security.md).
+
+## Para equipos técnicos
+
+**Tecnologías:** React 19, TypeScript, Vite, Tailwind CSS, Express, Supabase PostgreSQL y Supabase Auth. El repositorio incluye pruebas con `node:test`, Playwright y pgTAP.
 
 ```mermaid
 flowchart LR
-  UI[React + Vite + Tailwind] --> API[Express / API serverless]
-  API --> AUTH[Supabase Auth]
-  API --> DB[(PostgreSQL)]
-  DB --> RLS[RLS por tenant y rol]
-  API --> AI[OpenRouter opcional]
+    UI["Interfaz React"] --> API["API Express / Vercel"]
+    UI --> SB["Supabase"]
+    API --> SB
+    SB --> AUTH["Auth, PostgreSQL y Storage"]
 ```
 
-- `src/app/`: shell, navegación y providers.
-- `src/features/`: causas, anotaciones, documentos y reportes.
-- `src/shared/`: servicios, stores Zustand, hooks, schemas Zod y UI compartida.
-- `server/`: Express, middleware de autenticación, membresías y rutas API.
-- `supabase/migrations/`: esquema, RPCs, índices y políticas RLS.
+| Carpeta | Contenido |
+| --- | --- |
+| `src/` | Interfaz, módulos funcionales y servicios compartidos. |
+| `server/` y `api/` | API, autenticación y entrada para despliegue. |
+| `supabase/` | Migraciones, políticas de acceso y validación. |
+| `docs/` | [Guía de documentación](docs/README.md), arquitectura, operación y referencias. |
 
-Para una vista más detallada, revisa [`docs/architecture/project-overview.md`](docs/architecture/project-overview.md).
+### Desarrollo local
 
-## Stack
-
-| Capa           | Tecnología                                                |
-| -------------- | --------------------------------------------------------- |
-| Frontend       | React 19, TypeScript, Vite 8, Tailwind CSS 4              |
-| UI y estado    | Radix UI, Zustand, TanStack Query, React Hook Form, Zod   |
-| Backend        | Node.js, Express, esbuild                                 |
-| Datos y auth   | Supabase PostgreSQL, Supabase Auth, RLS                   |
-| Documentos     | `pdfjs-dist`, `react-to-print`, exportación Excel         |
-| Observabilidad | Sentry, PostHog, Web Vitals                               |
-| Calidad        | `node:test`, Testing Library, Playwright, axe-core, pgTAP |
-
-## Desarrollo local
-
-### Requisitos
-
-- Node.js 22
-- Docker Desktop para Supabase local
-- Cuenta Supabase solo si se conecta a un proyecto propio
-- OpenRouter opcional para funciones de asistencia editorial
-
-### Instalación
+Se necesita **Node.js 22**. Para conectar datos reales, configura un proyecto Supabase propio; Docker permite trabajar con Supabase local. Las funciones de IA requieren las claves correspondientes.
 
 ```bash
 git clone https://github.com/Hluengo/sistema-integral-convivencia-escolar.git
 cd sistema-integral-convivencia-escolar
-npm install
+npm ci
 cp .env.example .env.local
+# Configura las variables necesarias en .env.local
 npm run dev
 ```
 
-La aplicación queda en `http://localhost:3001`. No copies secretos desde otro entorno. Usa `.env.example` como plantilla y conserva las claves privilegiadas únicamente en el servidor.
+La aplicación de desarrollo se sirve en `http://localhost:3001`. El archivo `.env.example` enumera las variables y distingue las claves de servidor. Nunca incluyas secretos ni datos de estudiantes en un commit.
 
-### Comandos principales
+| Comando | Propósito |
+| --- | --- |
+| `npm run dev` | Iniciar el servidor y Vite en desarrollo. |
+| `npm run typecheck` | Revisar tipos de TypeScript. |
+| `npm run lint:code` | Revisar el código con ESLint. |
+| `npm run test` | Ejecutar pruebas unitarias y de integración. |
+| `npm run test:e2e` | Ejecutar pruebas de navegador. |
+| `npm run build` | Construir la web y las entradas del servidor. |
+| `npm run ci` | Ejecutar el control de calidad configurado. |
 
-```bash
-npm run dev              # desarrollo con Express + Vite HMR
-npm run lint             # ESLint + TypeScript
-npm run test             # tests unitarios e integración
-npm run test:coverage    # tests con cobertura mínima de líneas
-npm run test:e2e         # Playwright
-npm run build            # build web + servidor + API generado
-npm run build:storybook  # catálogo visual de componentes
-npm run ci               # lint + cobertura + build + auditoría
-```
+Para la configuración de despliegue, consulta [la guía de Vercel y Supabase](docs/DEPLOY.md). Para decisiones de diseño y desarrollo, consulta la [guía de documentación](docs/README.md) y el [manual de ingeniería](docs/engineering/HANDBOOK.md).
 
-## Estado de calidad
+## Consultas y condiciones de uso
 
-Verificación local más reciente:
-
-- **1018/1018 tests** aprobados en 217 suites.
-- Cobertura: **91,34 % líneas**, **82,86 % ramas**, **91,67 % funciones**.
-- Build de producción aprobado.
-- Build de Storybook aprobado.
-- `npm audit --omit=dev`: 0 vulnerabilidades.
-- Bundle dentro del presupuesto configurado.
-
-## Roadmap
-
-- Mejorar cobertura de comportamiento de componentes React.
-- Ampliar pruebas E2E autenticadas por rol y establecimiento.
-- Completar reportes avanzados y flujos administrativos.
-- Evaluar modo offline y nuevos módulos institucionales.
-
-El detalle vivo está en [`docs/architecture/future-roadmap.md`](docs/architecture/future-roadmap.md).
-
-## Contribuir
-
-1. Lee [`docs/CONSTITUTION.md`](docs/CONSTITUTION.md) y [`docs/engineering/HANDBOOK.md`](docs/engineering/HANDBOOK.md).
-2. Crea una rama desde `master`.
-3. Mantén los datos de estudiantes ficticios o anonimizados en tests, capturas y documentación.
-4. Ejecuta `npm run ci` antes de abrir un pull request.
-5. Describe claramente los cambios de seguridad, datos o permisos.
-
-## Licencia
-
-Este repositorio todavía no declara una licencia pública en un archivo `LICENSE`. Antes de reutilizar, distribuir o incorporar el código en otro producto, confirma la licencia con el autor.
-
-## Contacto
-
-Para sugerencias o reportes, usa [GitHub Issues](https://github.com/Hluengo/sistema-integral-convivencia-escolar/issues).
+Para consultas sobre acceso, implementación o mejoras, utiliza [GitHub Issues](https://github.com/Hluengo/sistema-integral-convivencia-escolar/issues). El repositorio no incluye actualmente un archivo `LICENSE`: la disponibilidad del código en GitHub no concede por sí sola permiso para reutilizarlo o comercializarlo. Consulta al titular antes de hacerlo.
