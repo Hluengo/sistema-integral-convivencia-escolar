@@ -22,31 +22,27 @@ Una plataforma para registrar anotaciones, gestionar expedientes, preparar docum
 
 El trabajo de convivencia escolar suele distribuirse entre registros, planillas y documentos. Gestión de Casos reúne antecedentes, etapas y acciones para facilitar el seguimiento de cada situación y la coordinación del equipo.
 
-```mermaid
-flowchart TD
-    A["Registrar antecedentes"] --> B["Abrir y organizar el expediente"]
-    B --> C["Dar seguimiento a actuaciones y plazos"]
-    C --> D["Preparar documentos y resoluciones"]
-    D --> E["Consultar reportes y cerrar el proceso"]
-```
+![Infografía de las cinco tareas principales: registrar, organizar, seguir, documentar y consultar](docs/infografias/flujo-expediente.svg)
 
 La plataforma ayuda a documentar el trabajo; la valoración de los hechos, las medidas y la revisión de su procedencia corresponden al equipo responsable.
 
 ## Conoce la plataforma
 
-Capturas ilustrativas del producto con el modo de privacidad activado. Las cifras mostradas son parte de esas vistas y no representan resultados de un establecimiento.
+Capturas tomadas de la aplicación en producción el 20 de noviembre de 2026, con el modo de privacidad activado. Las vistas de expedientes y anotaciones se encuadraron para no mostrar registros individuales. Las cifras del panel corresponden a la instancia mostrada y no representan resultados de otros establecimientos.
 
-| Panel de gestión | Expedientes |
+| Panel de gestión | Asistente legal |
 | :---: | :---: |
-| ![Panel con indicadores de causas y anotaciones](docs/screenshots/dashboard.png) | ![Listado de expedientes con etapas y estados](docs/screenshots/causas.png) |
+| ![Panel actual con indicadores y etapas procesales](docs/screenshots/dashboard.jpg) | ![Vista actual del revisor de debido proceso](docs/screenshots/asistente-legal.jpg) |
 
-| Anotaciones | Reportes |
+| Expedientes | Anotaciones |
 | :---: | :---: |
-| ![Registro de anotaciones y estado de cartas](docs/screenshots/anotaciones.png) | ![Filtros e indicadores del centro de reportes](docs/screenshots/reportes.png) |
+| ![Controles actuales de expedientes, sin registros individuales](docs/screenshots/expedientes.jpg) | ![Controles actuales de anotaciones, sin registros individuales](docs/screenshots/anotaciones.jpg) |
 
-[Ver la pantalla del asistente legal](docs/screenshots/asistente-legal.png).
+[Ver también el formulario de un nuevo expediente](docs/screenshots/nuevo-expediente.jpg).
 
 ## Qué puedes hacer
+
+![Infografía de las seis áreas de Gestión de Casos](docs/infografias/modulos-plataforma.svg)
 
 | Área | Funciones disponibles |
 | --- | --- |
@@ -56,6 +52,8 @@ Capturas ilustrativas del producto con el modo de privacidad activado. Las cifra
 | **Reportes** | Filtrar información, visualizar indicadores y exportar datos a Excel. |
 | **Administración** | Gestionar usuarios, roles, cursos, estudiantes y configuración institucional. |
 | **Privacidad** | Enmascarar nombres y RUT en pantalla mediante el modo de privacidad. |
+
+Las secciones disponibles para cada persona dependen de su rol y permisos en el establecimiento.
 
 ### Pensado para el trabajo del establecimiento
 
