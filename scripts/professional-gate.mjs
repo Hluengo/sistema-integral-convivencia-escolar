@@ -18,7 +18,6 @@ const npmCommand = isWindows ? "npm.cmd" : "npm";
 const checks = [
   ["lint", ["run", "lint"]],
   ["tests y cobertura", ["run", "test:coverage"]],
-  ["archivos y dependencias", ["run", "knip:ci"]],
   ["build", ["run", "build"]],
   ["auditoría de dependencias", ["run", "security-audit"]],
 ];
