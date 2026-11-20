@@ -75,7 +75,7 @@ describe("Resumen operativo de causa", () => {
   });
 
   it("no sugiere derivar a mediación como obligación cuando la investigación base está completa", () => {
-    const checklist = getBaseChecklist().map((item) =>
+    const checklist = getBaseChecklist(2).map((item) =>
       item.id === "chk_inv_1" || item.id === "chk_inv_2"
         ? { ...item, completado: true, fechaCompletado: "2026-08-10" }
         : item,
@@ -176,6 +176,40 @@ describe("Resumen operativo de causa", () => {
     assert.equal(summary.currentPhase, "Resolución");
     assert.equal(summary.currentPhaseProgress.phase, "Resolución");
     assert.equal(summary.nextChecklistPhase, "Resolución");
+  });
+
+  it("pasa a Seguimiento cuando los hitos visibles de Apelación están completos", () => {
+    const checklist = getBaseChecklist(2).map((item) =>
+      ["chk_imp_2", "chk_imp_4", "chk_imp_7"].includes(item.id)
+        ? { ...item, completado: true }
+        : item,
+    );
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.EN_PLAZO_APELACION,
+        checklistDebidoProceso: checklist,
+      }),
+    );
+
+    assert.equal(summary.currentPhase, "Seguimiento");
+    assert.equal(summary.nextChecklistItem?.id, "chk_seg_1");
+    assert.equal(summary.nextChecklistPhase, "Seguimiento");
+  });
+
+  it("pasa a Seguimiento cuando vence el plazo sin recurso", () => {
+    const checklist = getBaseChecklist(2).map((item) =>
+      ["chk_imp_6", "chk_imp_7"].includes(item.id)
+        ? { ...item, completado: true }
+        : item,
+    );
+    const summary = getCausaOperationalSummary(
+      causa({
+        estadoActual: EstadoCausa.EN_PLAZO_APELACION,
+        checklistDebidoProceso: checklist,
+      }),
+    );
+
+    assert.equal(summary.currentPhase, "Seguimiento");
   });
 
   it("no cuenta como actividad operativa los estados absorbidos", () => {

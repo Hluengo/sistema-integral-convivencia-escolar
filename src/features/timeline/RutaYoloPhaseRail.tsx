@@ -142,84 +142,90 @@ export default function RutaYoloPhaseRail({
                       const deadline = getItemDeadline(item, causa);
                       return (
                         <div key={item.id}>
-                          <button
-                            type="button"
-                            onClick={() => onSelectItem(item.id)}
-                            className={`w-full rounded-lg border p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 ${isSelected ? "border-emerald-500 bg-emerald-50/60 shadow-sm" : "border-neutral-200 bg-white hover:border-brand-300"}`}
-                            aria-pressed={isSelected}
-                            aria-label={`${item.label}: ${item.completado ? "registrado" : "pendiente"}`}
+                          <div
+                            className={`rounded-lg border transition ${isSelected ? "border-emerald-500 bg-emerald-50/60 shadow-sm" : "border-neutral-200 bg-white"}`}
                           >
-                            <div className="flex items-start gap-2.5">
-                              <span
-                                className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${item.completado ? "border-leve-600 bg-leve-600 text-white" : "border-neutral-300 bg-white text-transparent"}`}
-                              >
-                                <Check className="size-3" aria-hidden="true" />
-                              </span>
-                              <span className="min-w-0">
-                                <span className="block font-semibold text-neutral-900 text-11px leading-snug">
-                                  {item.label}
+                            <button
+                              type="button"
+                              onClick={() => onSelectItem(item.id)}
+                              className="w-full rounded-lg p-2.5 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 hover:border-brand-300"
+                              aria-pressed={isSelected}
+                              aria-label={`${item.label}: ${item.completado ? "registrado" : "pendiente"}`}
+                            >
+                              <div className="flex items-start gap-2.5">
+                                <span
+                                  className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border ${item.completado ? "border-leve-600 bg-leve-600 text-white" : "border-neutral-300 bg-white text-transparent"}`}
+                                >
+                                  <Check
+                                    className="size-3"
+                                    aria-hidden="true"
+                                  />
                                 </span>
-                                <span className="mt-1 block text-neutral-500 text-11px leading-snug">
-                                  {item.descripcion}
-                                </span>
-                                <span className="mt-1 flex flex-wrap gap-1 text-11px leading-snug">
-                                  <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
-                                    {item.requeridoPor}
+                                <span className="min-w-0">
+                                  <span className="block font-semibold text-neutral-900 text-11px leading-snug">
+                                    {item.label}
                                   </span>
-                                  {deadline && (
-                                    <span className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-700">
-                                      Plazo · {deadline}
+                                  <span className="mt-1 block text-neutral-500 text-11px leading-snug">
+                                    {item.descripcion}
+                                  </span>
+                                  <span className="mt-1 flex flex-wrap gap-1 text-11px leading-snug">
+                                    <span className="rounded bg-neutral-100 px-1.5 py-0.5 text-neutral-600">
+                                      {item.requeridoPor}
+                                    </span>
+                                    {deadline && (
+                                      <span className="rounded bg-sky-50 px-1.5 py-0.5 text-sky-700">
+                                        Plazo · {deadline}
+                                      </span>
+                                    )}
+                                    <span
+                                      className={`rounded px-1.5 py-0.5 ${item.completado ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
+                                    >
+                                      {item.completado
+                                        ? `Folio · ${item.fechaCompletado || "registrado"}`
+                                        : deadline
+                                          ? "Pendiente"
+                                          : "Sin fecha registrada"}
+                                    </span>
+                                  </span>
+                                  {item.completado && (
+                                    <span className="mt-1 block text-11px text-neutral-500">
+                                      Por:{" "}
+                                      {item.registradoPor ||
+                                        "Equipo de Convivencia Escolar"}
                                     </span>
                                   )}
-                                  <span
-                                    className={`rounded px-1.5 py-0.5 ${item.completado ? "bg-emerald-50 text-emerald-700" : "bg-amber-50 text-amber-700"}`}
-                                  >
-                                    {item.completado
-                                      ? `Folio · ${item.fechaCompletado || "registrado"}`
-                                      : deadline
-                                        ? "Pendiente"
-                                        : "Sin fecha registrada"}
-                                  </span>
                                 </span>
-                                {item.completado && (
-                                  <span className="mt-1 block text-11px text-neutral-500">
-                                    Por:{" "}
-                                    {item.registradoPor ||
-                                      "Equipo de Convivencia Escolar"}
-                                  </span>
-                                )}
-                              </span>
-                            </div>
-                          </button>
-
-                          {item.id === "chk_imp_2" &&
-                            currentRole !== "docente" && (
-                              <div className="mt-1 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-2 py-1.5">
-                                <button
-                                  type="button"
-                                  onClick={onRegisterDeadlineExpiry}
-                                  disabled={
-                                    deadlineExpiryRegistered ||
-                                    isCreatingManualLog
-                                  }
-                                  className="w-full text-left text-11px font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
-                                >
-                                  {deadlineExpiryRegistered
-                                    ? "✓ Plazo vencido registrado en historial"
-                                    : isCreatingManualLog
-                                      ? "Registrando…"
-                                      : "Registrar plazo vencido sin reconsideración o apelación"}
-                                </button>
-                                {manualLogError && (
-                                  <p
-                                    role="alert"
-                                    className="mt-1 text-11px text-red-700"
-                                  >
-                                    {manualLogError}
-                                  </p>
-                                )}
                               </div>
-                            )}
+                            </button>
+                            {item.id === "chk_imp_2" &&
+                              currentRole !== "docente" && (
+                                <div className="mx-2 mb-2 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-2 py-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={onRegisterDeadlineExpiry}
+                                    disabled={
+                                      deadlineExpiryRegistered ||
+                                      isCreatingManualLog
+                                    }
+                                    className="w-full text-left text-11px font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
+                                  >
+                                    {deadlineExpiryRegistered
+                                      ? "✓ Plazo vencido registrado en historial"
+                                      : isCreatingManualLog
+                                        ? "Registrando…"
+                                        : "Registrar plazo vencido sin reconsideración o apelación"}
+                                  </button>
+                                  {manualLogError && (
+                                    <p
+                                      role="alert"
+                                      className="mt-1 text-11px text-red-700"
+                                    >
+                                      {manualLogError}
+                                    </p>
+                                  )}
+                                </div>
+                              )}
+                          </div>
                         </div>
                       );
                     })}

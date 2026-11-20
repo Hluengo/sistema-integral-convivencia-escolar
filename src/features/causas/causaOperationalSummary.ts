@@ -20,6 +20,27 @@ const CAUSA_PHASES: FaseProcedimental[] = [
   "Seguimiento",
 ];
 
+function isAppealComplete(causa: Causa): boolean {
+  const appealProgress = getPhaseProgress(causa, "Apelación");
+  if (
+    appealProgress.total > 0 &&
+    appealProgress.completed === appealProgress.total
+  ) {
+    return true;
+  }
+
+  // Sin recurso presentado: el vencimiento y la notificación dejan lista
+  // la causa para iniciar medidas y seguimiento.
+  return (
+    causa.checklistDebidoProceso.some(
+      (item) => item.id === "chk_imp_6" && item.completado,
+    ) &&
+    causa.checklistDebidoProceso.some(
+      (item) => item.id === "chk_imp_7" && item.completado,
+    )
+  );
+}
+
 interface PhaseProgress {
   phase: FaseProcedimental;
   completed: number;
@@ -43,7 +64,13 @@ function getNextChecklistItem(
   causa: Causa,
   currentPhase: FaseProcedimental,
 ): { item: ChecklistItem | null; phase: FaseProcedimental | null } {
-  if (getCausaStatus(causa) !== "Activa") return { item: null, phase: null };
+  const status = getCausaStatus(causa);
+  const canStartSeguimiento =
+    currentPhase === "Seguimiento" &&
+    (status === "En apelación" || status === "Ejecutoriada");
+  if (status !== "Activa" && !canStartSeguimiento) {
+    return { item: null, phase: null };
+  }
 
   if (currentPhase === "Investigación") {
     const nextInvestigationItem = getNextInvestigationChecklistItem(causa);
@@ -93,6 +120,9 @@ export function getCausaOperationalPhase(causa: Causa): FaseProcedimental {
     CAUSA_PHASES.indexOf(computed) < CAUSA_PHASES.indexOf("Resolución")
   ) {
     return "Resolución";
+  }
+  if (computed === "Apelación" && isAppealComplete(causa)) {
+    return "Seguimiento";
   }
   return computed;
 }
