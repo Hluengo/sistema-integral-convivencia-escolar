@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock3,
   GitCompareArrows,
+  Archive,
 } from "lucide-react";
 import MetricCard from "../../shared/ui/MetricCard";
 
@@ -45,7 +46,7 @@ export default function DashboardExecutiveSummary({
   return (
     <section
       aria-label="Resumen ejecutivo"
-      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-5"
     >
       <MetricCard
         label="Casos ingresados"
@@ -93,6 +94,25 @@ export default function DashboardExecutiveSummary({
               resolución o apelación
             </span>
           </div>
+        }
+      />
+      <MetricCard
+        label="Casos cerrados"
+        value={closed}
+        sublabel="Expedientes finalizados y archivados"
+        icon={Archive}
+        iconBg="bg-leve-50"
+        iconColor="text-leve-700"
+        accentColor="#108981"
+        valueAside={
+          <span className="rounded-full bg-leve-50 px-2 py-1 font-bold text-xs text-leve-700">
+            {closureRate}% del total
+          </span>
+        }
+        footer={
+          <span className="block rounded-md bg-leve-50 px-2 py-1.5 text-leve-800 text-xs">
+            Disponibles en la vista de expedientes cerrados
+          </span>
         }
       />
       <MetricCard
