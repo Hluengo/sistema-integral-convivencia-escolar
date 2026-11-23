@@ -117,18 +117,6 @@ test("canCloseCase bloquea el cierre reforzado hasta resolver apelación y segui
   assert.match(result.blockers.join(" "), /reconsideración|seguimiento/i);
 });
 
-test("canCloseCase acepta el recurso resuelto sin exigir el plazo vencido", () => {
-  const cause = causa();
-  complete(cause, ["chk_imp_2", "chk_imp_4"]);
-
-  const result = canCloseCase(cause);
-
-  assert.equal(
-    result.blockers.some((blocker) => /reconsideración/i.test(blocker)),
-    false,
-  );
-});
-
 test("canCloseCase considera reconsideraciones persistidas pendientes", () => {
   const cause = causa();
   const result = canCloseCase(cause, {

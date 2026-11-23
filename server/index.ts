@@ -26,10 +26,10 @@ import { configureJsonBody } from "./middleware/jsonBody";
 import { ensureRuntimeConfig } from "./config/runtime";
 
 dotenv.config();
-dotenv.config({ path: ".env.local" });
+dotenv.config({ path: ".env.local", override: true });
 
 const app = express();
-const PORT = Number.parseInt(process.env.PORT || "3001", 10);
+const PORT = Number.parseInt(process.env.PORT || "3000", 10);
 const isDevelopment = process.env.NODE_ENV !== "production";
 
 const allowedOrigins = (process.env.ALLOWED_ORIGINS || "")
@@ -42,6 +42,7 @@ app.use(compression());
 app.use(
   helmet({
     crossOriginEmbedderPolicy: false,
+    xFrameOptions: false,
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
@@ -52,7 +53,7 @@ app.use(
         connectSrc: [
           "'self'",
           ...(isDevelopment
-            ? ["ws://localhost:3002", "ws://localhost:3001"]
+            ? ["ws://localhost:3002", "ws://localhost:3000"]
             : []),
           "https://*.supabase.co",
           "wss://*.supabase.co",
@@ -60,6 +61,13 @@ app.use(
           "https://*.ingest.us.sentry.io",
         ],
         workerSrc: ["'self'", "blob:"],
+        frameAncestors: [
+          "'self'",
+          "https://aistudio.google.com",
+          "https://*.google.com",
+          "https://*.googleusercontent.com",
+          "https://*.usercontent.goog",
+        ],
       },
     },
   }),

@@ -21,12 +21,23 @@ const CAUSA_PHASES: FaseProcedimental[] = [
 ];
 
 function isAppealComplete(causa: Causa): boolean {
-  // El total aplicable ya distingue la vía: con recurso (imp_2 e imp_4) o sin
-  // recurso (imp_6), y ambas terminan con imp_7.
   const appealProgress = getPhaseProgress(causa, "Apelación");
-  return (
+  if (
     appealProgress.total > 0 &&
     appealProgress.completed === appealProgress.total
+  ) {
+    return true;
+  }
+
+  // Sin recurso presentado: el vencimiento y la notificación dejan lista
+  // la causa para iniciar medidas y seguimiento.
+  return (
+    causa.checklistDebidoProceso.some(
+      (item) => item.id === "chk_imp_6" && item.completado,
+    ) &&
+    causa.checklistDebidoProceso.some(
+      (item) => item.id === "chk_imp_7" && item.completado,
+    )
   );
 }
 
@@ -64,9 +75,11 @@ function getNextChecklistItem(
   causa: Causa,
   currentPhase: FaseProcedimental,
 ): { item: ChecklistItem | null; phase: FaseProcedimental | null } {
-  // Solo una causa cerrada deja de proponer hitos: en apelación y ejecutoriada
-  // todavía hay actuaciones pendientes (recurso, plazo vencido o seguimiento).
-  if (getCausaStatus(causa) === "Cerrada") {
+  const status = getCausaStatus(causa);
+  const canStartSeguimiento =
+    currentPhase === "Seguimiento" &&
+    (status === "En apelación" || status === "Ejecutoriada");
+  if (status !== "Activa" && !canStartSeguimiento) {
     return { item: null, phase: null };
   }
 

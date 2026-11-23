@@ -1,7 +1,10 @@
+import dotenv from "dotenv";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import path from "node:path";
 import { defineConfig, type Plugin } from "vite";
+
+dotenv.config({ path: ".env.local", override: true });
 
 /**
  * Plugin dev-only: permite el WebSocket de HMR de Vite (puerto 3002) y el
@@ -19,7 +22,7 @@ function devCspHmrPlugin(): Plugin {
         .replace("script-src 'self'", "script-src 'self' 'unsafe-inline'")
         .replace(
           "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
-          "connect-src 'self' ws://localhost:3002 ws://localhost:3001 https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
+          "connect-src 'self' ws://localhost:3002 ws://localhost:3000 https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.ingest.us.sentry.io",
         );
     },
   };
@@ -76,6 +79,9 @@ export default defineConfig(() => {
       include: ["@supabase/supabase-js"],
     },
     server: {
+      host: "0.0.0.0",
+      port: 3000,
+      allowedHosts: true,
       watch: process.env.DISABLE_HMR === "true" ? null : {},
       hmr:
         process.env.DISABLE_HMR !== "true"

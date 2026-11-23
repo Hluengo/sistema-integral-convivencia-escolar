@@ -19,18 +19,42 @@ const authStorageKey =
   nodeEnv.VITE_SUPABASE_AUTH_STORAGE_KEY ??
   "convivencia-auth-token";
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    "Faltan las variables de entorno VITE_SUPABASE_URL y VITE_SUPABASE_ANON_KEY o VITE_SUPABASE_PUBLISHABLE_KEY. " +
-      "Créalas en el archivo .env.local",
+export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
+
+if (!isSupabaseConfigured) {
+  console.warn(
+    "[AI Studio] Supabase no configurado (faltan VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY). " +
+      "Ejecutando en modo stub sin conexión.",
   );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    storageKey: authStorageKey,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
+const offlineSupabaseFetch: typeof fetch = async () =>
+  new Response(
+    JSON.stringify({
+      error: "supabase_not_configured",
+      error_description:
+        "Supabase no está configurado en este entorno. Configure VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY.",
+      message:
+        "Supabase no está configurado en este entorno. Configure VITE_SUPABASE_URL y VITE_SUPABASE_PUBLISHABLE_KEY.",
+    }),
+    {
+      status: 503,
+      headers: { "Content-Type": "application/json" },
+    },
+  );
+
+export const supabase = createClient<Database>(
+  supabaseUrl || "https://placeholder.supabase.co",
+  supabaseAnonKey || "placeholder-anon-key",
+  {
+    auth: {
+      storageKey: authStorageKey,
+      persistSession: isSupabaseConfigured,
+      autoRefreshToken: isSupabaseConfigured,
+      detectSessionInUrl: isSupabaseConfigured,
+    },
+    ...(isSupabaseConfigured
+      ? {}
+      : { global: { fetch: offlineSupabaseFetch } }),
   },
-});
+);

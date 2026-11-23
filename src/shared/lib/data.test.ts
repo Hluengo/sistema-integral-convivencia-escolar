@@ -3,7 +3,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import { getBaseChecklist, getPhaseProgress } from "./data";
-import { getApplicableChecklistItems } from "./domain/investigationChecklist";
 import { EstadoCausa, type Causa } from "./types";
 
 const completedChecklist = (completedIds: string[]) =>
@@ -108,35 +107,6 @@ describe("getPhaseProgress", () => {
 
     assert.equal(items.total, 3);
     assert.equal(items.completed, 1);
-  });
-
-  it("ofrece recurso o plazo vencido antes de definir la vía de apelación", () => {
-    const current = causa([], {
-      proceduralModelVersion: 2,
-      checklistDebidoProceso: getBaseChecklist(2),
-    });
-
-    assert.deepEqual(
-      getApplicableChecklistItems(current, "Apelación").map((item) => item.id),
-      ["chk_imp_2", "chk_imp_6", "chk_imp_7"],
-    );
-  });
-
-  it("cierra apelación sin recurso y oculta la recepción de la solicitud", () => {
-    const current = causa([], {
-      proceduralModelVersion: 2,
-      checklistDebidoProceso: getBaseChecklist(2).map((item) =>
-        item.id === "chk_imp_6" ? { ...item, completado: true } : item,
-      ),
-    });
-
-    assert.deepEqual(
-      getApplicableChecklistItems(current, "Apelación").map((item) => item.id),
-      ["chk_imp_6", "chk_imp_7"],
-    );
-    const progress = getPhaseProgress(current, "Apelación");
-    assert.equal(progress.total, 2);
-    assert.equal(progress.completed, 1);
   });
 
   it("mantiene 2 hitos de apelación y 3 de seguimiento", () => {

@@ -184,6 +184,21 @@ export default function RutaYoloView({
     setSelectedItemId(defaultItem(items));
   };
 
+  const deadlineExpiryTitle = "Plazo Vencido sin Reconsideración o Apelación";
+  const deadlineExpiryRegistered = causa.bitacora.some(
+    (entry) => entry.titulo === deadlineExpiryTitle,
+  );
+  const registerDeadlineExpiry = async () => {
+    resetManualLogError();
+    await createManualLog({
+      title: deadlineExpiryTitle,
+      description:
+        "Se registra el vencimiento del plazo sin presentación de solicitud.",
+      type: "Otro",
+      participants: "Equipo de Convivencia Escolar",
+    });
+  };
+
   return (
     <>
       <div className="card flex flex-wrap items-center gap-3 px-3 py-2 text-xs">
@@ -291,8 +306,13 @@ export default function RutaYoloView({
           phaseItems={phaseItems}
           expandedPhase={expandedPhase}
           selectedItemId={selectedItemId}
+          currentRole={currentRole}
           onSelectPhase={selectPhase}
           onSelectItem={setSelectedItemId}
+          deadlineExpiryRegistered={deadlineExpiryRegistered}
+          isCreatingManualLog={isCreatingManualLog}
+          manualLogError={manualLogError}
+          onRegisterDeadlineExpiry={() => void registerDeadlineExpiry()}
         />
 
         <main className="min-w-0 bg-slate-50/50 p-2.5 sm:p-3">

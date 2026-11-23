@@ -37,7 +37,7 @@ export async function callOpenRouter(
     body,
     {
       Authorization: `Bearer ${getApiKey()}`,
-      "HTTP-Referer": "http://localhost:3001",
+      "HTTP-Referer": "http://localhost:3000",
       "X-Title": "Sistema Integral Convivencia Escolar",
     },
     options.timeoutMs,

@@ -10,7 +10,7 @@ let initialized = false;
 export function initPostHog() {
   if (initialized) return;
 
-  if (POSTHOG_KEY && POSTHOG_HOST) {
+  if (POSTHOG_KEY && POSTHOG_HOST && POSTHOG_KEY !== "phc_your_project_key") {
     posthog.init(POSTHOG_KEY, {
       api_host: POSTHOG_HOST,
       autocapture: false,

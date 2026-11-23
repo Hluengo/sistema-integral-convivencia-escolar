@@ -5,8 +5,11 @@ import * as Sentry from "@sentry/browser";
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN;
 const ENVIRONMENT = import.meta.env.MODE;
 
+const isValidSentryDsn =
+  Boolean(SENTRY_DSN) && !SENTRY_DSN?.includes("your-project@sentry.io");
+
 export function initSentry() {
-  if (SENTRY_DSN) {
+  if (isValidSentryDsn && SENTRY_DSN) {
     Sentry.init({
       dsn: SENTRY_DSN,
       environment: ENVIRONMENT,
@@ -37,7 +40,7 @@ export function captureException(
   error: unknown,
   context?: Record<string, unknown>,
 ) {
-  if (SENTRY_DSN) {
+  if (isValidSentryDsn) {
     Sentry.captureException(error, { extra: context });
   }
 }
@@ -47,7 +50,7 @@ export function captureMessage(
   level: Sentry.SeverityLevel = "info",
   context?: Record<string, unknown>,
 ) {
-  if (SENTRY_DSN) {
+  if (isValidSentryDsn) {
     Sentry.captureMessage(message, { level, extra: context });
   }
 }
@@ -55,13 +58,13 @@ export function captureMessage(
 export function setUserContext(
   user: { id: string; email?: string; role?: string } | null,
 ) {
-  if (SENTRY_DSN) {
+  if (isValidSentryDsn) {
     Sentry.setUser(user);
   }
 }
 
 export function addBreadcrumb(breadcrumb: Sentry.Breadcrumb) {
-  if (SENTRY_DSN) {
+  if (isValidSentryDsn) {
     Sentry.addBreadcrumb(breadcrumb);
   }
 }

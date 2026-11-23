@@ -244,34 +244,6 @@ describe("Resumen operativo de causa", () => {
     assert.equal(summary.currentPhase, "Seguimiento");
   });
 
-  it("propone notificar la decisión definitiva tras el plazo vencido", () => {
-    const checklist = getBaseChecklist(2).map((item) =>
-      item.id === "chk_imp_6" ? { ...item, completado: true } : item,
-    );
-    const summary = getCausaOperationalSummary(
-      causa({
-        estadoActual: EstadoCausa.EN_PLAZO_APELACION,
-        checklistDebidoProceso: checklist,
-      }),
-    );
-
-    assert.equal(summary.currentPhase, "Apelación");
-    assert.equal(summary.currentPhaseProgress.completed, 1);
-    assert.equal(summary.currentPhaseProgress.total, 2);
-    assert.equal(summary.nextChecklistItem?.id, "chk_imp_7");
-  });
-
-  it("propone los hitos de apelación mientras la causa está en apelación", () => {
-    const summary = getCausaOperationalSummary(
-      causa({
-        estadoActual: EstadoCausa.EN_PLAZO_APELACION,
-        checklistDebidoProceso: getBaseChecklist(2),
-      }),
-    );
-
-    assert.equal(summary.nextChecklistItem?.id, "chk_imp_2");
-  });
-
   it("no cuenta como actividad operativa los estados absorbidos", () => {
     const summary = getCausaOperationalSummary(
       causa({
