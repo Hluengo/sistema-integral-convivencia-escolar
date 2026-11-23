@@ -10,20 +10,21 @@ trazabilidad, derecho a defensa ni documentos históricos.
 La ruta muestra solo actuaciones verificables. Los estados transitorios se
 mantienen en `estadoActual` y no exigen un hito separado.
 
-| Fase        | Hitos visibles                                                                          | Estados absorbidos                                                     |
-| ----------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| Resolución  | Informe emitido; audiencia/descargos realizados; resolución notificada                  | Elaboración del informe; citación pendiente; elaboración de resolución |
-| Apelación   | Derecho y plazo informados; recurso recibido; recurso resuelto; resolución ejecutoriada | Revisión interna por Rectoría                                          |
-| Seguimiento | Medida/plan iniciado; seguimiento finalizado; cierre del expediente                     | Seguimiento en curso                                                   |
+| Fase        | Hitos visibles                                                                                              | Estados absorbidos                                                                 |
+| ----------- | ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Resolución  | Informe emitido; audiencia/descargos realizados; resolución notificada                                      | Elaboración del informe; citación pendiente; elaboración de resolución             |
+| Apelación   | Con recurso: recurso recibido y resuelto. Sin recurso: plazo vencido. Ambos: decisión definitiva notificada | Derecho y plazo informados; revisión interna por Rectoría; resolución ejecutoriada |
+| Seguimiento | Medida/plan iniciado; seguimiento finalizado; cierre del expediente                                         | Seguimiento en curso                                                               |
 
 ## Reglas de uso
 
 1. Registrar un hito solo cuando ocurrió una actuación o existe respaldo.
 2. Usar observaciones y documento en el hito visible para explicar citaciones,
    revisiones internas y fechas.
-3. Registrar recurso recibido y recurso resuelto solo si hubo apelación.
-4. El plazo de apelación se controla por fechas del expediente; el hito visible
-   acredita la información entregada al apoderado.
+3. Registrar recurso recibido y resuelto solo si hubo apelación; si no la hubo,
+   registrar el plazo vencido. Ambas vías son excluyentes.
+4. El hito de plazo vencido acredita que no se presentó recurso; no reemplaza la
+   constancia de la fecha límite del expediente.
 5. El cierre anticipado debe completar el hito de cierre y generar una entrada
    de bitácora con fundamento.
 6. Una rectificación conserva la entrada histórica y debe reconstruir el estado
@@ -40,7 +41,8 @@ todos los IDs por prefijo; no borrar datos de `checklist_items` ni de
 ## Validación
 
 - La ruta de Resolución muestra 3 hitos.
-- Apelación muestra 4 hitos.
+- Apelación ofrece recurso y plazo vencido como salidas excluyentes; al elegir
+  una, la otra desaparece y la fase cierra con la decisión definitiva notificada.
 - Seguimiento muestra 3 hitos.
 - La fase Investigación conserva su flujo condicional de Mediación.
 - Una rectificación sobrevive a la recarga.

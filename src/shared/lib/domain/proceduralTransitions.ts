@@ -198,11 +198,11 @@ export function canCloseCase(
       "chk_res_9",
       "Falta incorporar la decisión fundada.",
     ),
-    ...(causa.checklistDebidoProceso.some(
-      (item) => item.id === "chk_imp_6" && !item.completado,
-    ) && !reconsideraciones?.some((record) => record.estado !== "pendiente")
-      ? ["Falta resolver la reconsideración o registrar el plazo vencido."]
-      : []),
+    // Apelación se cierra por cualquiera de sus vías: recurso resuelto o plazo
+    // vencido sin presentación. La vía no elegida no es un bloqueo.
+    ...(done(causa, "chk_imp_4") || done(causa, "chk_imp_6")
+      ? []
+      : ["Falta resolver la reconsideración o registrar el plazo vencido."]),
     ...requiredIfPresent(
       causa,
       "chk_imp_7",

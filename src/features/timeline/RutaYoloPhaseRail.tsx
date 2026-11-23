@@ -27,13 +27,8 @@ interface RutaYoloPhaseRailProps {
   phaseItems: ChecklistItem[];
   expandedPhase: FaseProcedimental | null;
   selectedItemId: string | null;
-  currentRole: string;
   onSelectPhase: (phase: FaseProcedimental) => void;
   onSelectItem: (itemId: string) => void;
-  deadlineExpiryRegistered: boolean;
-  isCreatingManualLog: boolean;
-  manualLogError: string | null;
-  onRegisterDeadlineExpiry: () => void;
 }
 
 function formatDeadlineDate(value?: string) {
@@ -72,13 +67,8 @@ export default function RutaYoloPhaseRail({
   phaseItems,
   expandedPhase,
   selectedItemId,
-  currentRole,
   onSelectPhase,
   onSelectItem,
-  deadlineExpiryRegistered,
-  isCreatingManualLog,
-  manualLogError,
-  onRegisterDeadlineExpiry,
 }: RutaYoloPhaseRailProps) {
   const activeTone = getPhaseTone(activePhase);
 
@@ -197,34 +187,6 @@ export default function RutaYoloPhaseRail({
                                 </span>
                               </div>
                             </button>
-                            {item.id === "chk_imp_2" &&
-                              currentRole !== "docente" && (
-                                <div className="mx-2 mb-2 rounded-lg border border-dashed border-brand-200 bg-brand-50/50 px-2 py-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={onRegisterDeadlineExpiry}
-                                    disabled={
-                                      deadlineExpiryRegistered ||
-                                      isCreatingManualLog
-                                    }
-                                    className="w-full text-left text-11px font-semibold text-brand-700 disabled:cursor-not-allowed disabled:text-emerald-700"
-                                  >
-                                    {deadlineExpiryRegistered
-                                      ? "✓ Plazo vencido registrado en historial"
-                                      : isCreatingManualLog
-                                        ? "Registrando…"
-                                        : "Registrar plazo vencido sin reconsideración o apelación"}
-                                  </button>
-                                  {manualLogError && (
-                                    <p
-                                      role="alert"
-                                      className="mt-1 text-11px text-red-700"
-                                    >
-                                      {manualLogError}
-                                    </p>
-                                  )}
-                                </div>
-                              )}
                           </div>
                         </div>
                       );

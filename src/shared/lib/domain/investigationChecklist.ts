@@ -37,10 +37,12 @@ export const PHASE_PREFIXES: Readonly<Record<FaseProcedimental, string>> = {
  * Hitos operativos visibles en la ruta. Los IDs omitidos se conservan para
  * reconstruir expedientes históricos, pero representan estados transitorios
  * que no requieren un registro independiente.
- * Apelación opera con 3 hitos (chk_imp_2 recibida, chk_imp_4 resuelta, chk_imp_7 notificada).
- * chk_imp_1 (derecho informado) es implícito al notificar la resolución
- * (chk_res_6), que incluye la cláusula de reconsideración; chk_imp_3 es
- * revisión interna y chk_imp_5 es cierre que vive en Seguimiento.
+ * Apelación tiene dos salidas excluyentes: con recurso (chk_imp_2 recibida y
+ * chk_imp_4 resuelta) o sin recurso (chk_imp_6 plazo vencido); ambas terminan
+ * con chk_imp_7 (decisión definitiva notificada). chk_imp_1 (derecho informado)
+ * es implícito al notificar la resolución (chk_res_6), que incluye la cláusula
+ * de reconsideración; chk_imp_3 es revisión interna y chk_imp_5 es cierre que
+ * vive en Seguimiento.
  */
 export const ACTIVE_PHASE_ITEM_IDS: Readonly<
   Record<FaseProcedimental, readonly string[]>
@@ -48,7 +50,7 @@ export const ACTIVE_PHASE_ITEM_IDS: Readonly<
   Recepción: ["chk_rec_1", "chk_rec_2", "chk_rec_3"],
   Investigación: INVESTIGATION_ITEM_IDS,
   Resolución: ["chk_res_2", "chk_res_6"],
-  Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_7"],
+  Apelación: ["chk_imp_2", "chk_imp_4", "chk_imp_6", "chk_imp_7"],
   Seguimiento: ["chk_seg_1", "chk_seg_3", "chk_seg_4"],
 };
 
@@ -263,11 +265,24 @@ export function getApplicableChecklistItems(
   );
   if (phase !== "Apelación") return items;
 
-  const requestReceived = items.some(
+  // chk_imp_2 y chk_imp_6 son excluyentes: con recurso no se registra plazo
+  // vencido y sin recurso no se recibe ni resuelve una solicitud inexistente.
+  const appealReceived = items.some(
     (item) => item.id === "chk_imp_2" && item.completado,
   );
-  if (requestReceived) return items;
-  return items;
+  const deadlineExpired = items.some(
+    (item) => item.id === "chk_imp_6" && item.completado,
+  );
+  if (appealReceived) {
+    return items.filter((item) => item.id !== "chk_imp_6");
+  }
+  if (deadlineExpired) {
+    return items.filter(
+      (item) => item.id !== "chk_imp_2" && item.id !== "chk_imp_4",
+    );
+  }
+  // Mientras no se define la vía, se ofrecen ambas salidas y la notificación.
+  return items.filter((item) => item.id !== "chk_imp_4");
 }
 
 export function getApplicableInvestigationItems(
