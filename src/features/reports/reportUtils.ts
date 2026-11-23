@@ -3,6 +3,7 @@
 import type { SheetData } from "write-excel-file/browser";
 import type { Causa } from "../../shared/lib/types";
 import type { ReportFilters } from "../../shared/api/services/reports.service";
+import type { DecisionInsight } from "./reportInsights";
 
 export function filterReportCausas(
   causas: Causa[],
@@ -42,6 +43,8 @@ function buildReportRows(causas: Causa[]): Array<Array<string | number>> {
 export function buildReportSheet(
   causas: Causa[],
   generatedAt: Date,
+  insights: DecisionInsight[] = [],
+  annotationInsights: DecisionInsight[] = [],
 ): SheetData {
   const headerStyle = {
     backgroundColor: "#1E3A5F",
@@ -84,6 +87,54 @@ export function buildReportSheet(
       "Actualización",
     ].map((value) => ({ value, ...headerStyle })),
     ...buildReportRows(causas),
+    [],
+    [
+      {
+        value: "Orientaciones para la toma de decisiones educativas",
+        columnSpan: 7,
+        ...headerStyle,
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ],
+    ["Prioridad", "Señal", "Evidencia", "Siguiente acción", "Límite", "", ""],
+    ...insights.map((insight) => [
+      insight.priority,
+      insight.title,
+      insight.evidence,
+      insight.action,
+      insight.limitation,
+      "",
+      "",
+    ]),
+    [],
+    [
+      {
+        value: "Orientaciones sobre anotaciones y acompañamiento formativo",
+        columnSpan: 7,
+        ...headerStyle,
+      },
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+    ],
+    ["Prioridad", "Señal", "Evidencia", "Acción sugerida", "Límite", "", ""],
+    ...annotationInsights.map((insight) => [
+      insight.priority,
+      insight.title,
+      insight.evidence,
+      insight.action,
+      insight.limitation,
+      "",
+      "",
+    ]),
   ];
 }
 

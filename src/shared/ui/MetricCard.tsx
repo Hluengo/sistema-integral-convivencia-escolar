@@ -47,7 +47,7 @@ export default memo(function MetricCard({
   return (
     <Comp
       {...interactionProps}
-      className={`card group relative p-4 text-left transition-all duration-150 ${
+      className={`card group relative flex h-full w-full flex-col p-4 text-left transition-all duration-150 ${
         onClick
           ? "cursor-pointer hover:border-slate-300 hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-brand-600"
           : ""
