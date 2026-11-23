@@ -940,6 +940,10 @@ async function confirmDisciplinaryProcess(input) {
     }
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    console.error(
+      "RPC confirm_disciplinary_process_atomic:",
+      atomicError ? `${atomicError.code} ${atomicError.message}` : "sin fila"
+    );
     if (atomicError?.code === "23505") {
       const concurrentDuplicate = await findDuplicateFileByHash(
         supabase,
@@ -2319,15 +2323,9 @@ function ensureRuntimeConfig() {
       `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`
     );
   }
-  if (!process.env.UPSTASH_REDIS_REST_URL?.trim()) {
-    missing.push("UPSTASH_REDIS_REST_URL");
-  }
-  if (!process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
-    missing.push("UPSTASH_REDIS_REST_TOKEN");
-  }
-  if (missing.length > 0) {
-    throw new Error(
-      `Faltan variables de entorno obligatorias: ${missing.join(", ")}. Aborting startup.`
+  if (!process.env.UPSTASH_REDIS_REST_URL?.trim() || !process.env.UPSTASH_REDIS_REST_TOKEN?.trim()) {
+    console.warn(
+      "[rate-limit] Upstash no configurado: el rate limit no se comparte entre instancias en producci\xF3n."
     );
   }
   ensureJwtConfig();
@@ -3037,7 +3035,7 @@ async function callOpenRouter(messages, systemInstruction, model = AI_MODEL, opt
     body,
     {
       Authorization: `Bearer ${getApiKey()}`,
-      "HTTP-Referer": "http://localhost:3001",
+      "HTTP-Referer": "http://localhost:3000",
       "X-Title": "Sistema Integral Convivencia Escolar"
     },
     options.timeoutMs

@@ -209,7 +209,7 @@ test.describe("Accesibilidad pública", () => {
     await expectNoA11yViolations(page, '[role="dialog"]');
 
     const editButton = dialog.getByRole("tab", {
-      name: "Editar anotaciones",
+      name: "Anotaciones",
       exact: true,
     });
     await editButton.click();

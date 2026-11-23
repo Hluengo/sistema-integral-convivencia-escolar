@@ -9,7 +9,8 @@ dotenv.config({ path: ".env.local" });
 process.env.VITE_APP_MEMBERSHIPS_ENABLED =
   process.env.E2E_MEMBERSHIPS_ENABLED ?? "true";
 
-const baseURL = process.env.E2E_BASE_URL || "http://localhost:3001";
+const baseURL = process.env.E2E_BASE_URL || "http://localhost:3000";
+const serverPort = new URL(baseURL).port || "3000";
 const shouldStartWebServer =
   process.env.PLAYWRIGHT_USE_WEBSERVER === "true" || !process.env.CI;
 
@@ -40,11 +41,12 @@ export default defineConfig({
         // problema y prueba el mismo shell que se publica.
         command: "npm run build && npm run start",
         url: baseURL,
-        reuseExistingServer: true,
+        reuseExistingServer: false,
         timeout: 180 * 1000,
         cwd: process.cwd(),
         env: {
           ...process.env,
+          PORT: serverPort,
           NODE_ENV: "production",
           E2E_USE_JWT_CLAIMS: "true",
           // Producción exige Upstash; en E2E basta un valor ficticio porque

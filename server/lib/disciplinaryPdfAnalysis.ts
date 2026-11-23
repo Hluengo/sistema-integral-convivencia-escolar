@@ -1517,6 +1517,10 @@ export async function confirmDisciplinaryProcess(input: ConfirmInput): Promise<{
     },
   );
   if (atomicError || !Array.isArray(atomicResult) || !atomicResult[0]) {
+    console.error(
+      "RPC confirm_disciplinary_process_atomic:",
+      atomicError ? `${atomicError.code} ${atomicError.message}` : "sin fila",
+    );
     if (atomicError?.code === "23505") {
       const concurrentDuplicate = await findDuplicateFileByHash(
         supabase,
